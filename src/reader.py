@@ -1,0 +1,21 @@
+from src.logger import logger
+
+def read_text_file(file_path):
+
+    try:
+
+        with open(file_path, 'r', encoding='utf-8') as file:
+
+            text = file.read()
+
+        logger.info(f"Successfully read file: {file_path}")
+
+        return text
+
+    except FileNotFoundError:
+
+        logger.error(f"Error: The resume file at {file_path} was not found.")
+
+    except Exception as e:
+
+        logger.error(f"An unexpected error occurred: {str(e)}")

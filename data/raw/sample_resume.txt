@@ -1,0 +1,10 @@
+John Doe
+Python Developer
+
+Email: johndoe@gmail.com
+Phone: 9876543210
+
+Skills:
+Python
+Machine Learning
+SQL
