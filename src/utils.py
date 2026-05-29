@@ -1,28 +1,36 @@
-import string 
+import string
 
 
-def to_lower_case(text):
-    if not isinstance(text,str):
+def to_lower_case(text: str) -> str:
+    """
+    Convert text to lowercase.
+    """
+
+    if not isinstance(text, str):
         raise TypeError("text must be string")
+
     return text.lower()
 
 
+def remove_punctuation(text: str) -> str:
+    """
+    Remove punctuation characters.
+    """
 
-
-def remove_punctuations(text):
-    if not isinstance(text,str):
+    if not isinstance(text, str):
         raise TypeError("text must be string")
-    return text.translate(str.maketrans('','',string.punctuation))
+
+    return text.translate(
+        str.maketrans("", "", string.punctuation)
+    )
 
 
+def clean_whitespace(text: str) -> str:
+    """
+    Remove extra spaces.
+    """
 
-
-
-def clean_whitespace(text):
-    if not isinstance(text,str):
+    if not isinstance(text, str):
         raise TypeError("text must be string")
+
     return " ".join(text.split())
-
-s="HHHHHHHHHHHH,,,,    krish"
-print(to_lower_case(s))
-    

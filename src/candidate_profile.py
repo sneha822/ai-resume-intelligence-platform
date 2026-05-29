@@ -11,13 +11,8 @@ class CandidateProfile:
     ):
 
         self.name = name
-
         self.email = email
-
         self.phone = phone
-
         self.skills = skills
-
         self.education = education
-
         self.experience = experience
