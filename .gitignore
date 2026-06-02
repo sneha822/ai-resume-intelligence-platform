@@ -1,0 +1,15 @@
+# Local Virtual Environment (no need to upload to GitHub)
+myenv/
+
+# Python Cache Files
+__pycache__/
+*.pyc
+src/__pycache__/
+
+# Log Files
+logs/*.log
+
+# Editor and System Files
+.vscode/
+.DS_Store
+Thumbs.db
