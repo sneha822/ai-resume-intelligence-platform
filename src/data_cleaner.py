@@ -31,8 +31,22 @@ class CandidateDataCleaner:
         dataframe: pd.DataFrame
     ) -> pd.DataFrame:
 
-        dataframe["email"] = (
+        dataframe.loc[:, "email"] = (
             dataframe["email"]
+            .astype(str)
+            .str.lower()
+            .str.strip()
+        )
+
+        return dataframe
+
+    def standardize_skills(
+        self,
+        dataframe: pd.DataFrame
+    ) -> pd.DataFrame:
+
+        dataframe.loc[:, "skills"] = (
+            dataframe["skills"]
             .astype(str)
             .str.lower()
             .str.strip()
@@ -54,6 +68,10 @@ class CandidateDataCleaner:
         )
 
         dataframe = self.standardize_emails(
+            dataframe
+        )
+
+        dataframe = self.standardize_skills(
             dataframe
         )
 
