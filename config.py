@@ -24,3 +24,9 @@ ARTIFACT_DIR = os.path.join(
     BASE_DIR,
     "artifacts"
 )
+
+# --- Clean-Code Upgrade Add This Line Below ---
+DATABASE_PATH = os.path.join(
+    DATA_DIR,
+    "candidate_database.db"
+)
