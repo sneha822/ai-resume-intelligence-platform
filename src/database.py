@@ -1,12 +1,9 @@
 import sqlite3
-
+from src.logger import logger
 
 class CandidateDatabase:
 
-    def __init__(
-        self, 
-        database_path: str
-    ) -> None:
+    def __init__(self, database_path: str) -> None:
         """Initializes the database handler with a target file path."""
         self.database_path = database_path
 
@@ -15,7 +12,7 @@ class CandidateDatabase:
         return sqlite3.connect(self.database_path)
 
     def create_table(self) -> None:
-        """Creates the candidates table with a UNIQUE constraint on the email field."""
+        """Creates the candidates table if it does not already exist with a UNIQUE email constraint."""
         connection = self.create_connection()
         cursor = connection.cursor()
 
@@ -33,15 +30,10 @@ class CandidateDatabase:
         connection.commit()
         connection.close()
 
-    def insert_candidate(
-        self, 
-        email: str, 
-        phone: str, 
-        skills: str
-    ) -> None:
+    def insert_candidate(self, email: str, phone: str, skills: str) -> bool:
         """
         Safely inserts a new candidate record using parameterized queries.
-        Handles duplicate email conflicts gracefully without crashing the app.
+        Returns True if the insert succeeds, or False if a duplicate email is found.
         """
         connection = self.create_connection()
         cursor = connection.cursor()
@@ -49,25 +41,19 @@ class CandidateDatabase:
         try:
             cursor.execute(
                 """
-                INSERT INTO candidates (
-                    email, 
-                    phone, 
-                    skills
-                ) 
+                INSERT INTO candidates (email, phone, skills) 
                 VALUES (?, ?, ?)
                 """,
                 (email, phone, skills)
             )
             connection.commit()
-            print("Candidate inserted successfully")
-            
+            return True  # 🎉 Successfully inserted!
+
         except sqlite3.IntegrityError:
-            print(
-                f"Candidate with email "
-                f"'{email}' already exists."
-            )
-            
+            return False  # ⚠️ Skipped due to duplicate email unique violation
+
         finally:
+            # 🔒 This block ALWAYS runs, guaranteeing the connection closes safely!
             connection.close()
 
     def fetch_all_candidates(self) -> list:
@@ -75,19 +61,13 @@ class CandidateDatabase:
         connection = self.create_connection()
         cursor = connection.cursor()
 
-        cursor.execute(
-            "SELECT * FROM candidates"
-        )
+        cursor.execute("SELECT * FROM candidates")
         records = cursor.fetchall()
         
         connection.close()
         return records
 
-    def update_phone(
-        self, 
-        email: str, 
-        new_phone: str
-    ) -> None:
+    def update_phone(self, email: str, new_phone: str) -> None:
         """Updates the phone number for a candidate based on their unique email address."""
         connection = self.create_connection()
         cursor = connection.cursor()
@@ -104,10 +84,7 @@ class CandidateDatabase:
         connection.commit()
         connection.close()
 
-    def delete_candidate(
-        self, 
-        email: str
-    ) -> None:
+    def delete_candidate(self, email: str) -> None:
         """Removes a candidate record entirely from the database table via email lookups."""
         connection = self.create_connection()
         cursor = connection.cursor()

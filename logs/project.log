@@ -12,3 +12,25 @@
 2026-05-25 16:55:40,825 - INFO - Successfully read file: data/raw/sample_resume.txt
 2026-05-25 16:57:17,017 - INFO - Successfully read file: data/raw/sample_resume.txt
 2026-05-29 14:29:54,085 - INFO - Successfully read file: data\raw\sample_resume.txt
+2026-06-06 17:19:46,548 - INFO - Successfully read file: data/raw/sample_resume.txt
+2026-06-06 18:49:04,733 - INFO - Successfully read file: data/raw/sample_resume.txt
+2026-06-06 18:50:05,692 - INFO - Successfully read file: data/raw/sample_resume.txt
+2026-06-06 18:50:05,695 - INFO - Successfully read file: data/raw/sample_resume.txt
+2026-06-06 18:52:33,205 - INFO - Successfully read file: data/raw/sample_resume.txt
+2026-06-06 18:52:33,207 - INFO - Successfully read file: data/raw/sample_resume.txt
+2026-06-06 18:54:23,632 - INFO - Successfully read file: data/raw/sample_resume.txt
+2026-06-06 18:54:23,637 - INFO - Successfully read file: data/raw/sample_resume.txt
+2026-06-06 18:57:24,601 - INFO - Successfully read file: data/raw/sample_resume.txt
+2026-06-06 18:57:24,603 - INFO - Successfully read file: data/raw/sample_resume.txt
+2026-06-06 18:58:19,148 - INFO - Successfully read file: data/raw/sample_resume.txt
+2026-06-06 18:58:19,150 - INFO - Successfully read file: data/raw/sample_resume.txt
+2026-06-06 18:58:48,180 - INFO - Successfully read file: data/raw/sample_resume.txt
+2026-06-06 19:13:49,337 - INFO - Processing resume: data/raw/sample_resume.txt
+2026-06-06 19:13:49,338 - INFO - Successfully read file: data/raw/sample_resume.txt
+2026-06-06 19:13:49,340 - INFO - Candidate pipeline executed and stored successfully.
+2026-06-06 19:30:00,620 - INFO - Processing resume workflow started for: data/raw/sample_resume.txt
+2026-06-06 19:30:00,621 - INFO - Successfully read file: data/raw/sample_resume.txt
+2026-06-06 19:30:00,623 - WARNING - Duplicate candidate skipped to protect database integrity: johndoe@gmail.com
+2026-06-06 19:36:19,321 - INFO - Processing resume workflow started for: data/raw/sample_resume.txt
+2026-06-06 19:36:19,322 - INFO - Successfully read file: data/raw/sample_resume.txt
+2026-06-06 19:36:19,324 - WARNING - Duplicate candidate skipped to protect database integrity: johndoe@gmail.com
