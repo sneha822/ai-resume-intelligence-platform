@@ -1,6 +1,6 @@
 email,phone,skills,skill_count,candidate_level,candidate_score
+kavya.sharma@gmail.com,9876543212,"machine learning, python, sql, deep learning, aws",5,Advanced,100
 johndoe@gmail.com,9876543210,"python, sql, machine learning",3,Intermediate,60
 aryan.mehta@gmail.com,9876543211,"python, java, sql",3,Intermediate,60
-kavya.sharma@gmail.com,9876543212,"machine learning, python, sql, deep learning, aws",5,Advanced,100
 rohan.verma@gmail.com,9876543213,"java, c++",2,Beginner,30
 neha.singh@gmail.com,9876543214,"python, machine learning",2,Beginner,30
