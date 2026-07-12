@@ -82,3 +82,35 @@ class CandidateVisualizer:
         )
 
         plt.close()
+    
+    def plot_candidate_scores(
+    self,
+    dataframe,
+    save_path
+      ):
+       """
+       Plot candidate scores.
+       """
+
+       import matplotlib.pyplot as plt
+
+       plt.figure(
+          figsize=(8, 5)
+        )
+
+       plt.bar(
+            dataframe["email"],
+            dataframe["candidate_score"]
+        )
+
+       plt.xticks(
+        rotation=45
+    )
+
+       plt.tight_layout()
+
+       plt.savefig(
+        save_path
+    )
+
+       plt.close()
