@@ -23,7 +23,8 @@ database.insert_candidate(
 )
 print("Candidate inserted successfully")
 
-# Test fetching and printing records out cleanly
+# Test fetching and printing records out cleanly (UPGRADED VERSION)
 candidates = database.fetch_all_candidates()
 print("\n--- Current Candidates in Database ---")
-print(candidates)
+for candidate in candidates:
+    print(candidate)
