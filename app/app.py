@@ -1,5 +1,12 @@
 import streamlit as st
 import pandas as pd
+# Add these alongside your other imports at the top
+from src.file_handler import FileHandler
+from src.parser import ResumeParser
+
+# Initialize your backend engines near the top of the script
+file_handler = FileHandler()
+resume_parser = ResumeParser()
 
 # 1. Page Configuration (Must be the first Streamlit command)
 st.set_page_config(
@@ -67,7 +74,17 @@ tab1, tab2 = st.tabs(["📤 Upload & Analyze", "📋 Project Overview & Docs"])
 with tab1:
     st.markdown("### 🚀 Candidate Intake")
     
-    # Drag and Drop File Uploader Container
+    # 1. This is your existing drag-and-drop uploader widget
+    uploaded_files = st.file_uploader(
+        "Drop candidate resumes here (PDF, TXT, or DOCX format)", 
+        type=["txt", "pdf"], 
+        accept_multiple_files=True
+    )
+    
+    # 2. CLEAR & REPLACED LOGIC: What happens when files are uploaded
+    with tab1:
+    st.markdown("### 🚀 Candidate Intake")
+    
     uploaded_files = st.file_uploader(
         "Drop candidate resumes here (PDF, TXT, or DOCX format)", 
         type=["txt", "pdf"], 
@@ -77,12 +94,37 @@ with tab1:
     if uploaded_files:
         st.success(f"Successfully staged {len(uploaded_files)} file(s) for parsing!")
         
-        # Action button to trigger parsing engine
         if st.button("🔥 Run Intelligence Pipeline"):
             with st.spinner("Executing structural extraction and scoring algorithms..."):
-                # Simulation placeholder for future data pipeline hookup
-                st.info("Pipeline processing active. Data results will populate your downstream views.")
+                upload_dir = "data/temp_uploads"
+                
+                for uploaded_file in uploaded_files:
+                    try:
+                        # 1. Save the file to disk
+                        saved_path = file_handler.save_uploaded_file(uploaded_file, upload_dir)
+                        
+                        # ==========================================================
+                        # STEP 5: ADD RESUME PREVIEW HERE (Inside the loop)
+                        # ==========================================================
+                        if uploaded_file.type == "text/plain":
+                            file_content = uploaded_file.getvalue().decode("utf-8")
+                            with st.expander(f"👀 Preview Raw Text: {uploaded_file.name}"):
+                                st.text(file_content[:1000])
+                        # ==========================================================
+                        
+                        # 2. Parse the file using your backend parser
+                        parsed_data = resume_parser.parse_resume(saved_path)
+                        
+                        # 3. Print the JSON result on the screen
+                        st.markdown(f"### 📄 {uploaded_file.name}")
+                        st.json(parsed_data)
+                        
+                    except Exception as error:
+                        st.error(f"Error processing {uploaded_file.name}: {str(error)}")
+                        
+                st.success("Pipeline processing complete!")
     else:
+        # If no files are uploaded, show this tip
         st.info("💡 Pro-Tip: Drag multiple resume profiles simultaneously to batch-score your pool.")
 
 with tab2:
