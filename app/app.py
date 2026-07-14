@@ -1,6 +1,7 @@
 import os
 import sys
 import streamlit as st
+import pandas as pd
 
 # Fix Python path so 'src' can be discovered when running from the app directory
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -84,7 +85,13 @@ st.markdown("---")
 # ==========================================================
 # 6. Interactive Workspace (Tabs)
 # ==========================================================
-tab1, tab2 = st.tabs(["📤 Upload & Analyze", "📋 Project Overview & Docs"])
+tab1, tab2, tab3 = st.tabs(
+    [
+        "📤 Upload & Analyze",
+        "📊 Dashboard",
+        "📋 Project Overview & Docs"
+    ]
+)
 
 with tab1:
     st.markdown("### 🚀 Candidate Intake")
@@ -154,6 +161,63 @@ with tab1:
         st.info("💡 Pro-Tip: Drag multiple resume profiles simultaneously to batch-score your pool.")
 
 with tab2:
+    st.subheader("📊 Candidate Analytics Dashboard")
+    
+    # Step 2: Load the dataset locally
+    df = pd.read_csv("data/processed_candidates.csv")
+    
+    # Step 3: Dashboard Metrics
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.metric(label="Candidates", value=len(df))
+    with col2:
+        st.metric(label="Advanced Candidates", value=len(df[df["candidate_level"] == "Advanced"]))
+    with col3:
+        st.metric(label="Average Skill Count", value=round(df["skill_count"].mean(), 2))
+        
+    st.markdown("---")
+    
+    # Step 4: Candidate Level Distribution (Bar Chart)
+    st.markdown("### 📈 Experience Level Distribution")
+    level_counts = df["candidate_level"].value_counts()
+    st.bar_chart(level_counts)
+    
+    st.markdown("---")
+    
+    # Step 5: Candidate Ranking Table (Dataframe)
+    st.markdown("### 🏆 Candidate Leaderboard")
+    ranking_columns = ["email", "candidate_level", "candidate_score"]
+    st.dataframe(
+        df[ranking_columns].sort_values(by="candidate_score", ascending=False),
+        use_container_width=True
+    )
+    
+    st.markdown("---")
+    
+    # Step 6: Top Skills Section
+    st.markdown("### 🔥 Top Skills in Candidate Pool")
+    skill_data = {
+        "Python": 4, 
+        "SQL": 3, 
+        "Machine Learning": 3, 
+        "Java": 2, 
+        "C++": 1
+    }
+    st.bar_chart(skill_data)
+    
+    st.markdown("---")
+    
+    # Step 7: Candidate Distribution Pie Chart
+    st.markdown("### 🍕 Skill Distribution Overview")
+    try:
+        st.image(
+            "artifacts/plots/skill_distribution.png", 
+            caption="Visual Skill Distribution Breakdown", 
+            use_container_width=True
+        )
+    except Exception:
+        st.info("💡 Pro-Tip: Ensure your skill distribution chart is generated at 'artifacts/plots/skill_distribution.png' to render the visual pie chart here!")
+
     st.markdown('<div class="section-card">', unsafe_allow_html=True)
     st.markdown("### 🧩 Platform Architecture & Features")
     st.write("""
