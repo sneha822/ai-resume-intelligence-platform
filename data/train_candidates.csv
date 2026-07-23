@@ -1,0 +1,5 @@
+email,phone,skills,skill_count,candidate_level,experience_years,project_count,certification_count
+neha.singh@gmail.com,9876543214,"python, machine learning",2,Beginner,1,2,1
+kavya.sharma@gmail.com,9876543212,"machine learning, python, sql, deep learning, aws",5,Advanced,4,5,3
+johndoe@gmail.com,9876543210,"python, sql, machine learning",3,Intermediate,2,3,1
+rohan.verma@gmail.com,9876543213,"java, c++",2,Beginner,0,1,0
