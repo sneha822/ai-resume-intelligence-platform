@@ -1,58 +1,37 @@
-# AI Resume Intelligence & Interview Copilot Platform
+# 📄 AI Resume Intelligence Platform
+
+A modular, data-driven platform designed to ingest unstructured resumes (PDF/TXT), extract key candidate properties, compute numerical feature metrics, and prepare ML-ready datasets for applicant tracking and candidate ranking.
+
+---
 
 ## 📌 Project Overview
-The **AI Resume Intelligence & Interview Copilot Platform** is an end-to-end application designed to automate unstructured resume ingestion, parse core candidate features (emails, phone numbers, skills), validate profiles, and aggregate structured datasets using Pandas.
 
-This project is built incrementally following industry-standard software engineering practices, including modular code structure, centralized logging, and strict data validation rules.
-
----
-
-## 🛠️ Tech Stack
-* **Language:** Python 3.13+
-* **Data Handling:** Pandas
-* **Text Processing:** Regular Expressions (Regex)
-* **Version Control:** Git & GitHub
+The **AI Resume Intelligence Platform** automates the labor-intensive process of parsing applicant profiles. By converting unstructured resume documents into structured tabular data, the platform enables seamless feature engineering, candidate scoring, and instant skill-based searching—laying the foundation for predictive machine learning models.
 
 ---
 
-## 🚀 Current Features (Week 1 Foundation)
-### 1. Resume Parsing & Processing
-* **Text Extraction:** Ingests raw text files from local directories.
-* **Text Cleaning:** Standardizes spacing and casing to prepare text for extraction.
-* **Information Extraction:** Employs precise regular expressions to extract emails, phone numbers, and technical skills.
+## 🏗️ Folder Structure
 
-### 2. Data Management & Validation
-* **Object-Oriented Profiling:** Models candidate data consistently in runtime memory.
-* **Pandas Dataset Storage:** Converts candidate lists into clean 2D dataframes and saves them directly to `data/candidates.csv`.
-* **Data Validation Gateway:** Checks profiles to ensure emails are valid and skills match our accepted baseline.
-
-### 3. Application Telemetry
-* **Centralized Logger:** Records all file adjustments and pipeline failures into `logs/project.log` instead of cluttering the console with `print` statements.
-
----
-
-## 📂 Project Structure
 ```text
 ai-resume-intelligence-platform/
-├── data/                      # Persistent storage layers
-│   ├── candidates.csv         # Structured dataset output
-│   └── raw/                   # Unstructured candidate source files (.txt, .pdf)
-├── logs/                      # System diagnostic logs
-│   └── project.log
-├── notes/                     # Architecture & sprint tracking notes
-│   ├── week1_architecture.md
-│   └── week1_review.md
-├── src/                       # Core functional backend modules
-│   ├── candidate_profile.py
-│   ├── extraction.py
-│   ├── helper.py
-│   ├── logger.py
-│   ├── parser.py
-│   ├── preprocessing.py
-│   ├── reader.py
-│   ├── storage.py
-│   ├── utils.py
-│   └── validation.py
-├── config.py                  # Global application configurations
-├── README.md                  # Master repository overview
-└── requirements.txt           # Explicit system dependencies
+│
+├── app/
+│   └── app.py                      # Interactive Streamlit Web Dashboard
+│
+├── src/
+│   ├── file_handler.py             # File saving & stream buffer handling
+│   ├── parser.py                   # Resume parsing & token extraction
+│   ├── dataset_builder.py          # Numerical feature matrix generator
+│   ├── dataset_statistics.py       # Statistical summary generator
+│   ├── data_splitter.py           # Train/Test dataset splitter module
+│   └── data_summary.py             # Dataset schema & info utility
+│
+├── data/
+│   ├── temp_uploads/               # Staging area for uploaded resume files
+│   ├── processed_candidates.csv    # Consolidated candidate master dataset
+│   ├── train_candidates.csv        # ML training subset
+│   └── test_candidates.csv         # ML testing evaluation subset
+│
+├── test_pipeline_flow.py           # End-to-end feature pipeline test suite
+├── requirements.txt                # Python dependencies
+└── README.md                       # Project documentation
