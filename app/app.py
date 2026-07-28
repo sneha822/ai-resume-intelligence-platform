@@ -1,60 +1,17 @@
-"""
-AI Resume Intelligence Platform - Streamlit Dashboard
------------------------------------------------------
-Consolidated user interface for extracting resume data, inspecting
-candidate metrics, searching applicant profiles, and viewing system specs.
-"""
-
 import os
 import sys
-from typing import Optional
-
 import pandas as pd
 import streamlit as st
 
-# ----------------------------------------------------------
-# Environment Setup & Path Resolution
-# ----------------------------------------------------------
-# Ensure root workspace directory is accessible in Python Path
-ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-if ROOT_DIR not in sys.path:
-    sys.path.append(ROOT_DIR)
+# Ensure root workspace directory is in sys.path
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from src.file_handler import FileHandler
 from src.parser import ResumeParser
 
-# ----------------------------------------------------------
-# Configuration Constants
-# ----------------------------------------------------------
-DATASET_PATH = os.path.join(ROOT_DIR, "data", "processed_candidates.csv")
-TEMP_UPLOAD_DIR = os.path.join(ROOT_DIR, "data", "temp_uploads")
-
-
-# ----------------------------------------------------------
-# Helper Data Loaders
-# ----------------------------------------------------------
-def load_candidate_dataset(file_path: str = DATASET_PATH) -> Optional[pd.DataFrame]:
-    """
-    Safely loads candidate dataset records from CSV.
-
-    Args:
-        file_path (str): Filepath to processed candidates CSV.
-
-    Returns:
-        Optional[pd.DataFrame]: Pandas DataFrame if successful, else None.
-    """
-    if os.path.exists(file_path):
-        try:
-            return pd.read_csv(file_path)
-        except Exception as err:
-            st.warning(f"Could not load dataset: {err}")
-            return None
-    return None
-
-
-# ----------------------------------------------------------
-# Page Configuration & Custom CSS
-# ----------------------------------------------------------
+# ==========================================================
+# 1. Page Configuration
+# ==========================================================
 st.set_page_config(
     page_title="AI Resume Intelligence Platform",
     page_icon="📄",
@@ -62,6 +19,58 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
+# ==========================================================
+# 2. Dynamic Data Loading & Metrics
+# ==========================================================
+DATASET_PATH = "data/processed_candidates.csv"
+
+
+def load_candidate_data():
+    """Safely loads processed candidate dataset."""
+    if os.path.exists(DATASET_PATH):
+        try:
+            return pd.read_csv(DATASET_PATH)
+        except Exception:
+            return None
+    return None
+
+
+df_candidates = load_candidate_data()
+
+if df_candidates is not None and not df_candidates.empty:
+    total_candidates = len(df_candidates)
+    avg_skills = (
+        round(df_candidates["skill_count"].mean(), 1)
+        if "skill_count" in df_candidates.columns
+        else "N/A"
+    )
+    avg_exp = (
+        round(df_candidates["experience_years"].mean(), 1)
+        if "experience_years" in df_candidates.columns
+        else "N/A"
+    )
+
+    if "candidate_level" in df_candidates.columns:
+        beginner_count = len(
+            df_candidates[df_candidates["candidate_level"] == "Beginner"]
+        )
+        intermediate_count = len(
+            df_candidates[df_candidates["candidate_level"] == "Intermediate"]
+        )
+        advanced_count = len(
+            df_candidates[df_candidates["candidate_level"] == "Advanced"]
+        )
+    else:
+        beginner_count = intermediate_count = advanced_count = "N/A"
+else:
+    total_candidates = 0
+    avg_skills = "N/A"
+    avg_exp = "N/A"
+    beginner_count = intermediate_count = advanced_count = "N/A"
+
+# ==========================================================
+# 3. Custom CSS Styling
+# ==========================================================
 st.markdown(
     """
     <style>
@@ -76,59 +85,34 @@ st.markdown(
         color: #4B5563;
         margin-bottom: 25px;
     }
-    .section-card {
+    .card {
         background-color: #F8FAFC;
-        padding: 20px;
-        border-radius: 10px;
+        padding: 18px;
+        border-radius: 8px;
         border: 1px solid #E2E8F0;
-        margin-bottom: 20px;
+        margin-bottom: 15px;
     }
     </style>
 """,
     unsafe_allow_html=True,
 )
 
-# ----------------------------------------------------------
-# Core Subsystem Initialization & Dataset Metrics
-# ----------------------------------------------------------
+# ==========================================================
+# 4. Component Initialization
+# ==========================================================
 file_handler = FileHandler()
 resume_parser = ResumeParser()
-df_candidates = load_candidate_dataset()
 
-# Calculate dynamic dataset metrics cleanly
-if df_candidates is not None and not df_candidates.empty:
-    total_candidates = len(df_candidates)
-    avg_skills = (
-        round(df_candidates["skill_count"].mean(), 1)
-        if "skill_count" in df_candidates.columns
-        else "N/A"
-    )
-    avg_exp = (
-        round(df_candidates["experience_years"].mean(), 1)
-        if "experience_years" in df_candidates.columns
-        else "N/A"
-    )
-    advanced_candidates = (
-        len(df_candidates[df_candidates["candidate_level"] == "Advanced"])
-        if "candidate_level" in df_candidates.columns
-        else "N/A"
-    )
-else:
-    total_candidates = 0
-    avg_skills = "N/A"
-    avg_exp = "N/A"
-    advanced_candidates = "N/A"
-
-# ----------------------------------------------------------
-# Sidebar Control Panel
-# ----------------------------------------------------------
+# ==========================================================
+# 5. Sidebar Control Panel
+# ==========================================================
 with st.sidebar:
     st.markdown("## 🛠️ Control Panel")
-    st.caption("Day 25 • Codebase & UI Optimization")
+    st.caption("Day 25 • Dashboard Optimization")
     st.markdown("---")
 
-    st.markdown("### Engine Settings")
-    parse_engine = st.selectbox(
+    st.markdown("### Settings")
+    parse_mode = st.selectbox(
         "Parsing Engine", ["Rule-Based (Fast)", "Advanced NLP (Coming Soon)"]
     )
     enable_scoring = st.checkbox("Apply Scoring Engine", value=True)
@@ -136,155 +120,150 @@ with st.sidebar:
     st.markdown("---")
     st.caption("AI Resume Intelligence Platform v1.0 • 2026")
 
-# ----------------------------------------------------------
-# Header & Dynamic Metrics Overview
-# ----------------------------------------------------------
+# ==========================================================
+# 6. Header & Metrics Overview
+# ==========================================================
 st.markdown(
     '<p class="main-title">📄 AI Resume Intelligence Platform</p>',
     unsafe_allow_html=True,
 )
 st.markdown(
-    '<p class="subtitle">Extract structural insights, calculate feature metrics, and search applicant analytics dynamically.</p>',
+    '<p class="subtitle">Extract core insights, calculate dynamic candidate metrics, and explore applicant analytics.</p>',
     unsafe_allow_html=True,
 )
 
-metric_col1, metric_col2, metric_col3, metric_col4 = st.columns(4)
-
-with metric_col1:
+col1, col2, col3 = st.columns(3)
+with col1:
     st.metric(label="Total Candidates", value=str(total_candidates))
-
-with metric_col2:
-    st.metric(label="Average Skills", value=str(avg_skills))
-
-with metric_col3:
+with col2:
+    st.metric(label="Average Skill Count", value=str(avg_skills))
+with col3:
     st.metric(
         label="Average Experience",
         value=f"{avg_exp} yrs" if avg_exp != "N/A" else "N/A",
     )
 
-with metric_col4:
-    st.metric(label="Advanced Candidates", value=str(advanced_candidates))
-
 st.markdown("---")
 
-# ----------------------------------------------------------
-# Main Application Workspace Tabs
-# ----------------------------------------------------------
-tab_upload, tab_analytics, tab_search, tab_docs = st.tabs(
-    [
-        "📤 Resume Upload",
-        "📊 Candidate Analytics",
-        "🔍 Search Candidates",
-        "ℹ️ About & Docs",
-    ]
+# ==========================================================
+# 7. Workspace Tabs
+# ==========================================================
+tab_upload, tab_analytics, tab_search = st.tabs(
+    ["📤 Upload & Analyze", "📊 Candidate Analytics", "🔍 Search Candidates"]
 )
 
-# TAB 1: Intake & Resume Parsing
+# ----------------------------------------------------------
+# TAB 1: Upload & Formatted Candidate Analysis (Task 2)
+# ----------------------------------------------------------
 with tab_upload:
-    st.markdown("### 🚀 Candidate Intake & Parsing")
+    st.markdown("### 🚀 Candidate Intake")
 
     uploaded_files = st.file_uploader(
-        "Drop candidate resumes here (TXT or PDF format)",
+        "Drop candidate resumes here (PDF or TXT format)",
         type=["txt", "pdf"],
         accept_multiple_files=True,
     )
 
     if uploaded_files:
-        st.success(f"Staged {len(uploaded_files)} file(s) for parsing.")
+        st.success(f"Staged {len(uploaded_files)} file(s) for parsing!")
 
-        if st.button("🔥 Run Parsing Pipeline"):
-            with st.spinner("Processing structural feature extractions..."):
+        if st.button("🔥 Run Intelligence Pipeline"):
+            with st.spinner("Processing structural extractions..."):
+                upload_dir = "data/temp_uploads"
+
                 for uploaded_file in uploaded_files:
                     try:
                         saved_path = file_handler.save_uploaded_file(
-                            uploaded_file, TEMP_UPLOAD_DIR
+                            uploaded_file, upload_dir
                         )
 
                         if uploaded_file.type == "text/plain":
                             file_content = uploaded_file.getvalue().decode("utf-8")
-                            with st.expander(f"👀 Preview: {uploaded_file.name}"):
+                            with st.expander(f"👀 Raw Text Preview: {uploaded_file.name}"):
                                 st.text(file_content[:1000])
 
+                        # Core Parser Call (Parser logic remains unchanged)
                         parsed_data = resume_parser.parse_resume(saved_path)
 
-                        st.markdown(f"#### 📄 Extract: `{uploaded_file.name}`")
-                        st.json(parsed_data)
+                        st.markdown("---")
+                        st.markdown(f"## 📄 Candidate Profile: `{uploaded_file.name}`")
 
-                        skills_count = len(parsed_data.get("skills", []))
-                        st.metric(
-                            label="⚡ Precision Extraction",
-                            value=f"{skills_count} Skills Found",
-                            delta=(
-                                "Match Found" if skills_count > 0 else "No Skills"
-                            ),
-                        )
+                        # Task 2: Formatted Display Sections
+                        col_left, col_right = st.columns(2)
+
+                        with col_left:
+                            # 1. Candidate Details
+                            st.markdown("### 👤 Candidate Details")
+                            st.write(f"**Email:** {parsed_data.get('email', 'N/A')}")
+                            st.write(f"**Phone:** {parsed_data.get('phone', 'N/A')}")
+
+                            # 2. Experience & Level
+                            st.markdown("### 💼 Experience & Classification")
+                            exp_years = parsed_data.get("experience_years", "N/A")
+                            st.write(f"**Years of Experience:** {exp_years}")
+                            st.write(
+                                f"**Candidate Tier:** `{parsed_data.get('candidate_level', 'Unclassified')}`"
+                            )
+
+                        with col_right:
+                            # 3. Skills
+                            st.markdown("### ⚡ Extracted Skills")
+                            skills_list = parsed_data.get("skills", [])
+                            if isinstance(skills_list, list) and len(skills_list) > 0:
+                                for skill in skills_list:
+                                    st.markdown(f"* {skill}")
+                            elif isinstance(skills_list, str) and len(skills_list) > 0:
+                                for skill in skills_list.split(","):
+                                    st.markdown(f"* {skill.strip()}")
+                            else:
+                                st.write("No explicit skills detected.")
+
+                        # 4. Additional Metrics (Projects & Certifications)
+                        st.markdown("### 📊 Key Numerical Highlights")
+                        stat1, stat2, stat3 = st.columns(3)
+                        with stat1:
+                            st.metric(
+                                label="Skill Count",
+                                value=str(len(skills_list) if isinstance(skills_list, list) else 0),
+                            )
+                        with stat2:
+                            st.metric(
+                                label="Projects Identified",
+                                value=str(parsed_data.get("project_count", 0)),
+                            )
+                        with stat3:
+                            st.metric(
+                                label="Certifications",
+                                value=str(parsed_data.get("certification_count", 0)),
+                            )
+
+                        with st.expander("🔍 View Raw Parsed Data (JSON)"):
+                            st.json(parsed_data)
+
                         st.markdown("---")
 
-                    except Exception as err:
-                        st.error(f"Error parsing `{uploaded_file.name}`: {err}")
+                    except Exception as error:
+                        st.error(f"Error processing {uploaded_file.name}: {str(error)}")
 
-                st.success("Pipeline parsing complete!")
-    else:
-        st.info("💡 Select or drop candidate resumes above to start extraction.")
+                st.success("Pipeline processing complete!")
 
-# TAB 2: Candidate Dataset Analytics
+# ----------------------------------------------------------
+# TAB 2 & 3
+# ----------------------------------------------------------
 with tab_analytics:
-    st.markdown("### 📊 Dataset Overview")
-
+    st.markdown("### 📊 Dataset Summary")
     if df_candidates is not None and not df_candidates.empty:
         st.dataframe(df_candidates, use_container_width=True)
-
-        st.markdown("#### Feature Matrix Summary")
-        numeric_columns = df_candidates.select_dtypes(include=["number"])
-        if not numeric_columns.empty:
-            st.dataframe(numeric_columns.describe(), use_container_width=True)
     else:
-        st.warning(f"No candidate dataset found at `{DATASET_PATH}`.")
+        st.warning("No dataset loaded at `data/processed_candidates.csv`.")
 
-# TAB 3: Skill & Keyword Candidate Search
 with tab_search:
-    st.markdown("### 🔍 Search Candidate Profiles")
-
-    search_query = st.text_input(
-        "Enter keyword or skill (e.g., Python, SQL, Machine Learning):"
-    )
-
-    if search_query:
-        if df_candidates is not None and not df_candidates.empty:
-            search_results = df_candidates[
-                df_candidates["skills"]
-                .astype(str)
-                .str.contains(search_query, case=False, na=False)
-            ]
-
-            if not search_results.empty:
-                st.write(
-                    f"Found **{len(search_results)}** matching candidate(s):"
-                )
-                st.dataframe(search_results, use_container_width=True)
-            else:
-                st.info(f"No candidates matching '{search_query}'.")
-        else:
-            st.warning("Candidate database currently unavailable.")
-
-# TAB 4: Architecture & Documentation
-with tab_docs:
-    st.markdown('<div class="section-card">', unsafe_allow_html=True)
-    st.markdown("### 🧩 System Architecture Overview")
-    st.write(
-        """
-        The AI Resume Intelligence Platform extracts structured attributes from unstructured 
-        resumes, computes numerical feature records, and outputs normalized datasets for downstream ML training.
-        """
-    )
-
-    st.markdown("#### Core Execution Modules:")
-    st.markdown(
-        """
-        * **Extraction Pipeline:** Standardizes input files and parses schema values.
-        * **Feature Engineering:** Quantifies experience metrics and skill counts.
-        * **Data Splitter:** Prepares training (`train_candidates.csv`) and evaluation splits.
-        * **Search Engine:** Performs instant filtering on extracted skill features.
-        """
-    )
-    st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown("### 🔍 Search Candidates")
+    query = st.text_input("Enter skill keyword (e.g. Python, SQL):")
+    if query and df_candidates is not None and not df_candidates.empty:
+        results = df_candidates[
+            df_candidates["skills"]
+            .astype(str)
+            .str.contains(query, case=False, na=False)
+        ]
+        st.dataframe(results, use_container_width=True)
