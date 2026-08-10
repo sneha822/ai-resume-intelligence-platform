@@ -1,6 +1,11 @@
-email,phone,skills,skill_count,candidate_level,experience_years,project_count,certification_count
-johndoe@gmail.com,9876543210,"python, sql, machine learning",3,Intermediate,2,3,1
-aryan.mehta@gmail.com,9876543211,"python, java, sql",3,Intermediate,1,2,0
-kavya.sharma@gmail.com,9876543212,"machine learning, python, sql, deep learning, aws",5,Advanced,4,5,3
-rohan.verma@gmail.com,9876543213,"java, c++",2,Beginner,0,1,0
-neha.singh@gmail.com,9876543214,"python, machine learning",2,Beginner,1,2,1
+email,phone,skills,skill_count,candidate_level,experience_years,project_count,certification_count,selection_status
+johndoe@gmail.com,9876543210,"python, sql, machine learning",3,Intermediate,2,3,1,shortlisted
+aryan.mehta@gmail.com,9876543211,"python, java, sql",3,Intermediate,1,2,0,rejected
+kavya.sharma@gmail.com,9876543212,"machine learning, python, sql, deep learning, aws",5,Advanced,4,5,3,shortlisted
+rohan.verma@gmail.com,9876543213,"java, c++",2,Beginner,0,1,0,rejected
+neha.singh@gmail.com,9876543214,"python, machine learning",2,Beginner,1,2,1,shortlisted
+amit.kumar@gmail.com,9876543215,"python, sql, docker",3,Intermediate,3,3,2,shortlisted
+sara.khan@gmail.com,9876543216,"html, css",2,Beginner,0,0,0,rejected
+priya.patel@gmail.com,9876543217,"python, pytorch, sql, aws",4,Advanced,3,4,2,shortlisted
+vikram.rao@gmail.com,9876543218,"c++",1,Beginner,0,1,0,rejected
+sunil.das@gmail.com,9876543219,"python, sql, machine learning, pandas",4,Intermediate,2,3,1,shortlisted
