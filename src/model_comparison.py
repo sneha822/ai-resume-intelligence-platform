@@ -82,3 +82,24 @@ class ModelComparator:
             results[model_name] = accuracy
 
         return results
+    def get_models(self):
+        """Return the models used for candidate selection comparison."""
+
+        return {
+            "Logistic Regression": LogisticRegression(
+                max_iter=1000
+            ),
+
+            "Random Forest": RandomForestClassifier(
+                n_estimators=100,
+                random_state=42
+            ),
+
+            "XGBoost": XGBClassifier(
+                n_estimators=100,
+                max_depth=3,
+                learning_rate=0.1,
+                random_state=42,
+                eval_metric="logloss"
+            )
+        }
