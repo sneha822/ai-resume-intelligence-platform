@@ -8,6 +8,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from src.file_handler import FileHandler
 from src.parser import ResumeParser
+from src.best_model import BestModelTrainer
 
 # ==========================================================
 # 1. Page Configuration
@@ -102,13 +103,14 @@ st.markdown(
 # ==========================================================
 file_handler = FileHandler()
 resume_parser = ResumeParser()
+best_model = BestModelTrainer()
 
 # ==========================================================
 # 5. Sidebar Control Panel
 # ==========================================================
 with st.sidebar:
     st.markdown("## 🛠️ Control Panel")
-    st.caption("Day 25 • Dashboard Optimization")
+    st.caption("Day 30 • Feature Inspection & Predictions")
     st.markdown("---")
 
     st.markdown("### Settings")
@@ -153,7 +155,7 @@ tab_upload, tab_analytics, tab_search = st.tabs(
 )
 
 # ----------------------------------------------------------
-# TAB 1: Upload & Formatted Candidate Analysis (Task 2)
+# TAB 1: Upload & Formatted Candidate Analysis
 # ----------------------------------------------------------
 with tab_upload:
     st.markdown("### 🚀 Candidate Intake")
@@ -182,13 +184,30 @@ with tab_upload:
                             with st.expander(f"👀 Raw Text Preview: {uploaded_file.name}"):
                                 st.text(file_content[:1000])
 
-                        # Core Parser Call (Parser logic remains unchanged)
+                        # Core Parser Call
                         parsed_data = resume_parser.parse_resume(saved_path)
+
+                        # Extract Candidate Features
+                        skills_list = parsed_data.get("skills", [])
+                        skill_count = len(skills_list) if isinstance(skills_list, list) else 0
+                        exp_years = parsed_data.get("experience_years", 0)
+                        project_count = parsed_data.get("project_count", 0)
+                        cert_count = parsed_data.get("certification_count", 0)
+
+                        candidate_features = [
+                            skill_count,
+                            exp_years,
+                            project_count,
+                            cert_count
+                        ]
+
+                        # Predict Candidate Outcome using saved Best Model
+                        prediction = best_model.predict(candidate_features)
 
                         st.markdown("---")
                         st.markdown(f"## 📄 Candidate Profile: `{uploaded_file.name}`")
 
-                        # Task 2: Formatted Display Sections
+                        # Formatted Display Sections
                         col_left, col_right = st.columns(2)
 
                         with col_left:
@@ -199,7 +218,6 @@ with tab_upload:
 
                             # 2. Experience & Level
                             st.markdown("### 💼 Experience & Classification")
-                            exp_years = parsed_data.get("experience_years", "N/A")
                             st.write(f"**Years of Experience:** {exp_years}")
                             st.write(
                                 f"**Candidate Tier:** `{parsed_data.get('candidate_level', 'Unclassified')}`"
@@ -208,7 +226,6 @@ with tab_upload:
                         with col_right:
                             # 3. Skills
                             st.markdown("### ⚡ Extracted Skills")
-                            skills_list = parsed_data.get("skills", [])
                             if isinstance(skills_list, list) and len(skills_list) > 0:
                                 for skill in skills_list:
                                     st.markdown(f"* {skill}")
@@ -218,25 +235,35 @@ with tab_upload:
                             else:
                                 st.write("No explicit skills detected.")
 
-                        # 4. Additional Metrics (Projects & Certifications)
+                        # 4. Key Numerical Highlights
                         st.markdown("### 📊 Key Numerical Highlights")
                         stat1, stat2, stat3 = st.columns(3)
                         with stat1:
-                            st.metric(
-                                label="Skill Count",
-                                value=str(len(skills_list) if isinstance(skills_list, list) else 0),
-                            )
+                            st.metric(label="Skill Count", value=str(skill_count))
                         with stat2:
-                            st.metric(
-                                label="Projects Identified",
-                                value=str(parsed_data.get("project_count", 0)),
-                            )
+                            st.metric(label="Projects Identified", value=str(project_count))
                         with stat3:
-                            st.metric(
-                                label="Certifications",
-                                value=str(parsed_data.get("certification_count", 0)),
-                            )
+                            st.metric(label="Certifications", value=str(cert_count))
 
+                        # 5. STEP 9: Candidate Selection Outcome Prediction
+                        st.markdown("### 🎯 Candidate Selection Prediction")
+                        if str(prediction).lower() == "shortlisted":
+                            st.success("✅ **Candidate Outcome: SHORTLISTED**")
+                            st.caption("This candidate meets the benchmark criteria for initial selection.")
+                        else:
+                            st.warning("❌ **Candidate Outcome: REJECTED**")
+                            st.caption("This profile does not currently meet the required selection threshold.")
+
+                        # 6. STEP 10: Model Input Features Inspector
+                        with st.expander("📊 Model Input Features"):
+                            st.write({
+                                "skill_count": candidate_features[0],
+                                "experience_years": candidate_features[1],
+                                "project_count": candidate_features[2],
+                                "certification_count": candidate_features[3]
+                            })
+
+                        # 7. Raw JSON Data View
                         with st.expander("🔍 View Raw Parsed Data (JSON)"):
                             st.json(parsed_data)
 
@@ -248,7 +275,7 @@ with tab_upload:
                 st.success("Pipeline processing complete!")
 
 # ----------------------------------------------------------
-# TAB 2 & 3
+# TAB 2 & 3: Analytics & Search
 # ----------------------------------------------------------
 with tab_analytics:
     st.markdown("### 📊 Dataset Summary")
