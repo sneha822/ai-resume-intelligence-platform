@@ -1,2 +1,7 @@
-email,phone,skills,skill_count,candidate_level,experience_years,project_count,certification_count
-aryan.mehta@gmail.com,9876543211,"python, java, sql",3,Intermediate,1,2,0
+email,phone,skills,skill_count,candidate_level,experience_years,project_count,certification_count,selection_status,employability_score,ranking_score
+aisha.khan@gmail.com,9876543201,python,1,Beginner,0,1,0,0,20,28
+pooja.hegde@gmail.com,9876543209,"html, css, javascript",3,Intermediate,2,3,1,0,60,16
+siddharth.rao@gmail.com,9876543207,"sql, excel",2,Beginner,1,2,0,0,30,24
+aryan.mehta@gmail.com,9876543211,"python, java, sql",3,Intermediate,2,4,1,1,60,18
+manish.pandey@gmail.com,9876543224,"java, spring boot, microservices, docker, kubernetes",5,Advanced,6,6,3,1,100,9
+simran.kaur@gmail.com,9876543223,"python, sql, spark, tensorflow, aws",5,Advanced,5,7,4,1,100,10

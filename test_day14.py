@@ -13,9 +13,9 @@ df = scorer.score_dataframe(df)
 # 4. Rank the candidates
 ranked_df = scorer.rank_candidates(df)
 
-print("\n=== Candidate Ranking ===")
-print(ranked_df[["email", "candidate_score"]])
+# 5. Print ranked candidates with employability score
+print(ranked_df[["email", "employability_score"]])
 
-# 5. Save the updated dataset with scores
+# 6. Save the updated dataset with scores
 ranked_df.to_csv("data/processed_candidates.csv", index=False)
 print("\nSuccessfully saved scores to data/processed_candidates.csv")

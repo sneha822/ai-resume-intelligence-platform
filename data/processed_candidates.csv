@@ -1,21 +1,31 @@
 email,phone,skills,skill_count,candidate_level,experience_years,project_count,certification_count,selection_status,employability_score,ranking_score
-kavya.sharma@gmail.com,9876543212,"machine learning, python, sql, deep learning, aws",5,Advanced,4,5,3,shortlisted,100,1
-meera.joshi@gmail.com,9876543226,"python, spark, aws, sql",4,Advanced,4,4,3,shortlisted,90,2
-tanvi.kapoor@gmail.com,9876543228,"python, machine learning, nlp, bert",4,Advanced,3,5,2,shortlisted,90,3
-priya.patel@gmail.com,9876543217,"python, pytorch, sql, aws",4,Advanced,3,4,2,shortlisted,90,4
-sneha.reddy@gmail.com,9876543222,"python, machine learning, scikit-learn, tensorflow",4,Advanced,5,6,4,shortlisted,90,5
-divya.nair@gmail.com,9876543224,"python, sql, tableau, powerbi",4,Intermediate,3,4,2,shortlisted,70,6
-sunil.das@gmail.com,9876543219,"python, sql, machine learning, pandas",4,Intermediate,2,3,1,shortlisted,70,7
-johndoe@gmail.com,9876543210,"python, sql, machine learning",3,Intermediate,2,3,1,shortlisted,60,8
-ananya.roy@gmail.com,9876543220,"python, django, postgresql",3,Intermediate,2,2,0,shortlisted,60,9
-aryan.mehta@gmail.com,9876543211,"python, java, sql",3,Intermediate,1,2,0,rejected,60,10
-amit.kumar@gmail.com,9876543215,"python, sql, docker",3,Intermediate,3,3,2,shortlisted,60,11
-rohan.verma@gmail.com,9876543213,"java, c++",2,Beginner,0,1,0,rejected,30,12
-varun.sharma@gmail.com,9876543227,"c#, .net",2,Beginner,1,1,0,rejected,30,13
-karan.malhotra@gmail.com,9876543229,"css, javascript",2,Beginner,0,1,0,rejected,30,14
-neha.singh@gmail.com,9876543214,"python, machine learning",2,Beginner,1,2,1,shortlisted,30,15
-sara.khan@gmail.com,9876543216,"html, css",2,Beginner,0,0,0,rejected,30,16
-rahul.gupta@gmail.com,9876543221,html,1,Beginner,0,0,0,rejected,20,17
-vikram.rao@gmail.com,9876543218,c++,1,Beginner,0,1,0,rejected,20,18
-deepak.mishra@gmail.com,9876543225,sql,1,Beginner,1,1,0,rejected,20,19
-alok.josh@gmail.com,9876543223,java,1,Beginner,0,1,0,rejected,20,20
+sakshi.agarwal@gmail.com,9876543229,"python, machine learning, deep learning, nlp, mlops, docker, aws",7,Advanced,8,9,5,1,120,1
+yash.singh@gmail.com,9876543230,"python, machine learning, tensorflow, pytorch, kubernetes, docker, aws",7,Advanced,9,8,5,1,120,2
+ishaan.malhotra@gmail.com,9876543226,"python, django, react, postgresql, docker, aws",6,Advanced,6,8,3,1,110,3
+divya.deshmukh@gmail.com,9876543228,"python, sql, spark, Hadoop, tableau, aws",6,Advanced,7,6,3,1,110,4
+tarun.bhasin@gmail.com,9876543227,"python, machine learning, deep learning, computer vision, pytorch, docker",6,Advanced,8,7,4,1,110,5
+kavya.sharma@gmail.com,9876543221,"machine learning, python, sql, deep learning, aws",5,Advanced,5,6,3,1,100,6
+arjun.reddy@gmail.com,9876543222,"python, machine learning, deep learning, pytorch, docker",5,Advanced,6,5,3,1,100,7
+alok.verma@gmail.com,9876543225,"python, machine learning, natural language processing, aws, docker",5,Advanced,7,5,4,1,100,8
+manish.pandey@gmail.com,9876543224,"java, spring boot, microservices, docker, kubernetes",5,Advanced,6,6,3,1,100,9
+simran.kaur@gmail.com,9876543223,"python, sql, spark, tensorflow, aws",5,Advanced,5,7,4,1,100,10
+megha.thakur@gmail.com,9876543219,"python, sql, statistics, pandas",4,Intermediate,4,3,2,1,70,11
+ritika.sen@gmail.com,9876543217,"python, sql, scikit-learn, pandas",4,Intermediate,4,5,2,1,70,12
+dev.sharma@gmail.com,9876543216,"python, machine learning, pandas, numpy",4,Intermediate,3,4,2,1,70,13
+varun.nair@gmail.com,9876543218,"react, node.js, express, mongodb",4,Intermediate,3,4,1,0,70,14
+deepak.mishra@gmail.com,9876543220,"c++, algorithms, data structures, sql",4,Intermediate,3,5,2,1,70,15
+pooja.hegde@gmail.com,9876543209,"html, css, javascript",3,Intermediate,2,3,1,0,60,16
+johndoe@gmail.com,9876543210,"python, sql, machine learning",3,Intermediate,3,3,2,1,60,17
+aryan.mehta@gmail.com,9876543211,"python, java, sql",3,Intermediate,2,4,1,1,60,18
+ananya.roy@gmail.com,9876543213,"sql, tableau, power bi",3,Intermediate,2,3,2,1,60,19
+karan.patel@gmail.com,9876543214,"python, flask, sql",3,Intermediate,3,3,1,0,60,20
+rahul.dr@gmail.com,9876543212,"python, pandas, numpy",3,Intermediate,3,2,1,0,60,21
+sneha.gupta@gmail.com,9876543215,"java, spring boot, sql",3,Intermediate,4,4,2,1,60,22
+vikram.aditya@gmail.com,9876543206,"python, git",2,Beginner,1,1,1,0,30,23
+siddharth.rao@gmail.com,9876543207,"sql, excel",2,Beginner,1,2,0,0,30,24
+rohan.verma@gmail.com,9876543202,"html, css",2,Beginner,1,1,0,0,30,25
+neha.singh@gmail.com,9876543203,"python, sql",2,Beginner,1,2,1,0,30,26
+tanvi.joshi@gmail.com,9876543208,javascript,1,Beginner,0,1,0,0,20,27
+aisha.khan@gmail.com,9876543201,python,1,Beginner,0,1,0,0,20,28
+priya.sharma@gmail.com,9876543204,java,1,Beginner,0,1,0,0,20,29
+amit.kumar@gmail.com,9876543205,c++,1,Beginner,0,0,0,0,20,30

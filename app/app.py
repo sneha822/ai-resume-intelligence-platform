@@ -7,7 +7,8 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from src.file_handler import FileHandler  
 from src.parser import ResumeParser  
-from src.skill_recommender import SkillRecommendationEngine  # Check file name in src/ (e.g., skill_recommender)
+from src.scoring import CandidateScorer  
+from src.skill_recommender import SkillRecommendationEngine
 
 # ==========================================================
 # 1. Page Configuration
@@ -49,6 +50,7 @@ st.markdown("""
 # ==========================================================
 file_handler = FileHandler()
 resume_parser = ResumeParser()
+candidate_scorer = CandidateScorer()
 skill_engine = SkillRecommendationEngine()
 
 # ==========================================================
@@ -124,18 +126,33 @@ with tab1:
                         st.markdown(f"### 📄 {uploaded_file.name}")
                         st.json(parsed_data)
                         
-                        # Step E: Dynamic Extraction Metrics
-                        skills_found = len(parsed_data.get("skills", []))
-                        st.metric(
-                            label="⚡ Extraction Precision", 
-                            value=f"{skills_found} Skills Found",
-                            delta="Structural Match" if skills_found > 0 else "No Skills Detected"
-                        )
+                        # Extract skills and experience level
+                        candidate_skills = parsed_data.get("skills", [])
+                        skills_found = len(candidate_skills)
+                        candidate_level = parsed_data.get("candidate_level", "Beginner")
+
+                        # Step E: Calculate Candidate / Employability Score
+                        total_score = candidate_scorer.calculate_total_score(skills_found, candidate_level)
+
+                        # Step F: Dynamic Metric Cards
+                        col_a, col_b = st.columns(2)
+                        with col_a:
+                            st.metric(
+                                label="⚡ Extraction Precision", 
+                                value=f"{skills_found} Skills Found",
+                                delta="Structural Match" if skills_found > 0 else "No Skills Detected"
+                            )
+                        with col_b:
+                            st.metric(
+                                label="🏆 Candidate / Employability Score", 
+                                value=f"{total_score} pts",
+                                delta=f"Level: {candidate_level}"
+                            )
                         
                         st.markdown("---")
                         
                         # ==========================================================
-                        # STEP 6: Skill Recommendation Section
+                        # Step G: Skill Recommendation Section
                         # ==========================================================
                         st.markdown("### 🎯 Skill Recommendations")
                         
@@ -144,8 +161,6 @@ with tab1:
                             ["ML Engineer", "Data Scientist", "Data Engineer", "Software Engineer"],
                             key=f"target_role_{uploaded_file.name}"
                         )
-                        
-                        candidate_skills = parsed_data.get("skills", [])
                         
                         # Call recommendation engine
                         rec_result = skill_engine.recommend_skills(candidate_skills, target_role)
@@ -184,7 +199,7 @@ with tab2:
     st.markdown("""
     *   **Automated Extraction Pipeline:** Validates schema consistency.
     *   **Feature-Engineering Weight Matrix:** Determines structural tiers (Beginner, Intermediate, Advanced).
-    *   **Day 14 Automated Scoring Engine:** Calculates deterministic baseline applicant values.
+    *   **Candidate Scoring Engine:** Calculates deterministic baseline applicant employability values.
     *   **Job Matching Engine:** Correlates profile token overlaps against variable vacancy targets.
     *   **Skill Recommendation Engine:** Identifies candidate skill gaps against industry target roles.
     """)

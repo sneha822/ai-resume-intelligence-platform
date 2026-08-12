@@ -44,3 +44,27 @@
 2026-07-15 07:09:11,559 - ERROR - Error encountered during resume parsing execution: [Errno 2] No such file or directory: 'data/raw/sample_resume.pdf'
 2026-07-15 07:12:22,763 - ERROR - [Errno 2] No such file or directory: 'data/raw/sample_resume.pdf'
 2026-07-15 07:12:22,764 - ERROR - Error encountered during resume parsing execution: [Errno 2] No such file or directory: 'data/raw/sample_resume.pdf'
+2026-08-12 16:00:02,647 - INFO - Processing resume workflow started for: data/raw/sample_resume.txt
+2026-08-12 16:00:02,650 - WARNING - Duplicate candidate skipped to protect database integrity: johndoe@gmail.com
+2026-08-12 16:39:50,331 - INFO - Processing resume workflow started for: data/raw/sample_resume.txt
+2026-08-12 16:39:50,334 - WARNING - Duplicate candidate skipped to protect database integrity: johndoe@gmail.com
+2026-08-12 16:39:50,335 - INFO - Processing resume workflow started for: data/raw/candidate_2.txt
+2026-08-12 16:39:50,342 - INFO - Successfully saved new candidate record for: kavya@gmail.com
+2026-08-12 16:39:50,343 - INFO - Processing resume workflow started for: data/raw/candidate_3.txt
+2026-08-12 16:39:50,344 - ERROR - Validation failed for candidate extraction data elements: {'email': 'rohan@gmail.com', 'phone': '9876543213', 'skills': [], 'experience_years': 0, 'project_count': 0, 'certification_count': 0}
+2026-08-12 16:39:50,344 - INFO - Processing resume workflow started for: data/raw/candidate_4.txt
+2026-08-12 16:39:50,355 - INFO - Successfully saved new candidate record for: neha@gmail.com
+2026-08-12 16:39:50,355 - INFO - Processing resume workflow started for: data/raw/candidate_5.txt
+2026-08-12 16:39:50,356 - ERROR - [Errno 2] No such file or directory: 'data/raw/candidate_5.txt'
+2026-08-12 16:39:50,356 - ERROR - Error encountered during resume parsing execution: [Errno 2] No such file or directory: 'data/raw/candidate_5.txt'
+2026-08-12 16:46:24,970 - ERROR - Error reading file data/raw/fake_resume.txt: [Errno 2] No such file or directory: 'data/raw/fake_resume.txt'
+2026-08-12 19:32:50,179 - ERROR - Exception in callback _ProactorBasePipeTransport._call_connection_lost()
+handle: <Handle _ProactorBasePipeTransport._call_connection_lost()>
+Traceback (most recent call last):
+  File "C:\ProgramData\anaconda3\Lib\asyncio\events.py", line 89, in _run
+    self._context.run(self._callback, *self._args)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\ProgramData\anaconda3\Lib\asyncio\proactor_events.py", line 165, in _call_connection_lost
+    self._sock.shutdown(socket.SHUT_RDWR)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+ConnectionResetError: [WinError 10054] An existing connection was forcibly closed by the remote host
