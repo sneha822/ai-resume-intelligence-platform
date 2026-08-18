@@ -6,12 +6,13 @@ import streamlit as st
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from src.file_handler import FileHandler  
-from src.parser import ResumeParser  
+from src.parser import ResumeParser 
+from src.interview_question_generator import InterviewQuestionGenerator 
 from src.scoring import CandidateScorer  
 from src.skill_recommender import SkillRecommendationEngine
 
 # ==========================================================
-# 1. Page Configuration
+# 1. Page Configuration & Session State
 # ==========================================================
 st.set_page_config(
     page_title="Resume Intelligence Platform",
@@ -19,6 +20,14 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
+
+# Initialize Session State for cross-tab data persistence
+if "parsed_skills" not in st.session_state:
+    st.session_state["parsed_skills"] = []
+if "processed_count" not in st.session_state:
+    st.session_state["processed_count"] = 0
+if "total_scores" not in st.session_state:
+    st.session_state["total_scores"] = []
 
 # ==========================================================
 # 2. Custom CSS Styling
@@ -50,6 +59,7 @@ st.markdown("""
 # ==========================================================
 file_handler = FileHandler()
 resume_parser = ResumeParser()
+question_generator = InterviewQuestionGenerator()
 candidate_scorer = CandidateScorer()
 skill_engine = SkillRecommendationEngine()
 
@@ -69,31 +79,42 @@ with st.sidebar:
     st.caption("AI Resume Intelligence Platform v1.0 • 2026")
 
 # ==========================================================
-# 5. Header Layout
+# 5. Header Layout & Dynamic Metrics
 # ==========================================================
 st.markdown('<p class="main-title">📄 AI Resume Intelligence & Interview Copilot</p>', unsafe_allow_html=True)
 st.markdown('<p class="subtitle">Extract core insights, rank candidate profiles, and generate intelligent interview pathways instantly.</p>', unsafe_allow_html=True)
 
-# Dashboard Summary Metrics
+# Calculate dynamic averages
+processed_cnt = st.session_state["processed_count"]
+avg_score_val = (
+    f"{sum(st.session_state['total_scores']) / processed_cnt:.1f} pts" 
+    if processed_cnt > 0 else "N/A"
+)
+
 col1, col2, col3 = st.columns(3)
 with col1:
-    st.metric(label="Processed Resumes", value="0", delta="Staging Empty")
+    st.metric(label="Processed Resumes", value=str(processed_cnt), delta="Active Session")
 with col2:
     st.metric(label="Top Matching Track", value="Python / SQL", delta="Data Engineering")
 with col3:
-    st.metric(label="Avg Match Score", value="N/A", delta="No data processed")
+    st.metric(label="Avg Match Score", value=avg_score_val, delta="Live Score" if processed_cnt > 0 else "No data processed")
 
 st.markdown("---")
 
 # ==========================================================
 # 6. Interactive Workspace (Tabs)
 # ==========================================================
-tab1, tab2 = st.tabs(["📤 Upload & Analyze", "📋 Project Overview & Docs"])
+tab1, tab2, tab3 = st.tabs(
+    [
+        "📤 Upload & Analyze",
+        "🎯 Interview Questions",
+        "📋 Project Overview & Docs"
+    ]
+)
 
 with tab1:
     st.markdown("### 🚀 Candidate Intake")
     
-    # File Uploader
     uploaded_files = st.file_uploader(
         "Drop candidate resumes here (PDF, TXT, or DOCX format)", 
         type=["txt", "pdf"], 
@@ -103,14 +124,18 @@ with tab1:
     if uploaded_files:
         st.success(f"Successfully staged {len(uploaded_files)} file(s) for parsing!")
         
-        # Pipeline Action Trigger
         if st.button("🔥 Run Intelligence Pipeline"):
             with st.spinner("Executing structural extraction and scoring algorithms..."):
                 upload_dir = "data/temp_uploads"
                 
-                for uploaded_file in uploaded_files:
+                # Reset counts for batch runs
+                st.session_state["processed_count"] = len(uploaded_files)
+                st.session_state["total_scores"] = []
+                st.session_state["parsed_skills"] = []
+
+                for idx, uploaded_file in enumerate(uploaded_files):
                     try:
-                        # Step A: Save memory-buffered file to local disk
+                        # Step A: Save file
                         saved_path = file_handler.save_uploaded_file(uploaded_file, upload_dir)
                         
                         # Step B: Text Preview Feature
@@ -119,10 +144,10 @@ with tab1:
                             with st.expander(f"👀 Preview Raw Text: {uploaded_file.name}"):
                                 st.text(file_content[:1000])
                         
-                        # Step C: Core Processing Pipeline execution
+                        # Step C: Parse Resume
                         parsed_data = resume_parser.parse_resume(saved_path)
                         
-                        # Step D: Dynamic JSON Output View
+                        # Step D: JSON Output View
                         st.markdown(f"### 📄 {uploaded_file.name}")
                         st.json(parsed_data)
                         
@@ -131,8 +156,17 @@ with tab1:
                         skills_found = len(candidate_skills)
                         candidate_level = parsed_data.get("candidate_level", "Beginner")
 
-                        # Step E: Calculate Candidate / Employability Score
-                        total_score = candidate_scorer.calculate_total_score(skills_found, candidate_level)
+                        # Collect parsed skills in session state
+                        for s in candidate_skills:
+                            if s.lower() not in st.session_state["parsed_skills"]:
+                                st.session_state["parsed_skills"].append(s.lower())
+
+                        # Step E: Calculate Score
+                        total_score = (
+                            candidate_scorer.calculate_total_score(skills_found, candidate_level) 
+                            if skills_found > 0 else 0
+                        )
+                        st.session_state["total_scores"].append(total_score)
 
                         # Step F: Dynamic Metric Cards
                         col_a, col_b = st.columns(2)
@@ -151,21 +185,18 @@ with tab1:
                         
                         st.markdown("---")
                         
-                        # ==========================================================
-                        # Step G: Skill Recommendation Section
-                        # ==========================================================
+                        # Step G: Skill Recommendation
                         st.markdown("### 🎯 Skill Recommendations")
                         
+                        # Fix Bug 1: Added unique index to widget key
                         target_role = st.selectbox(
                             "Select Target Role for Gap Analysis:",
                             ["ML Engineer", "Data Scientist", "Data Engineer", "Software Engineer"],
-                            key=f"target_role_{uploaded_file.name}"
+                            key=f"target_role_{uploaded_file.name}_{idx}"
                         )
                         
-                        # Call recommendation engine
                         rec_result = skill_engine.recommend_skills(candidate_skills, target_role)
                         
-                        # Extract list whether the return type is dict or list
                         if isinstance(rec_result, dict):
                             missing_skills = rec_result.get("missing_skills", rec_result.get("missing", []))
                         else:
@@ -188,6 +219,32 @@ with tab1:
         st.info("💡 Pro-Tip: Drag multiple resume profiles simultaneously to batch-score your pool.")
 
 with tab2:
+    st.markdown("### 🎯 Technical Interview Question Generator")
+    st.write("Generate technical interview questions based on candidate skills.")
+
+    # Fix Bug 3: Dynamically merge parsed skills into multi-select defaults
+    default_skill_pool = ["python", "sql", "machine learning", "java", "c++", "docker", "aws"]
+    all_available_skills = list(set(default_skill_pool + st.session_state["parsed_skills"]))
+
+    candidate_skills = st.multiselect(
+        "Select candidate skills",
+        options=all_available_skills,
+        default=st.session_state["parsed_skills"] if st.session_state["parsed_skills"] else None
+    )
+
+    if candidate_skills:
+        questions = question_generator.generate_questions_with_skills(candidate_skills)
+
+        st.success(f"Questions generated for {len(candidate_skills)} skill(s).")
+
+        for skill, skill_questions in questions.items():
+            st.markdown(f"#### 💻 {skill.title()}")
+            for number, question in enumerate(skill_questions, start=1):
+                st.write(f"{number}. {question}")
+    else:
+        st.info("Select candidate skills to generate technical interview questions.")
+
+with tab3:
     st.markdown('<div class="section-card">', unsafe_allow_html=True)
     st.markdown("### 🧩 Platform Architecture & Features")
     st.write("""
