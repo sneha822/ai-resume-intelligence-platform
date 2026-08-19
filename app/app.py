@@ -8,6 +8,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from src.file_handler import FileHandler  
 from src.parser import ResumeParser 
 from src.interview_question_generator import InterviewQuestionGenerator 
+from src.interview_report import InterviewReportGenerator
 from src.scoring import CandidateScorer  
 from src.skill_recommender import SkillRecommendationEngine
 
@@ -28,6 +29,8 @@ if "processed_count" not in st.session_state:
     st.session_state["processed_count"] = 0
 if "total_scores" not in st.session_state:
     st.session_state["total_scores"] = []
+if "latest_parsed_data" not in st.session_state:
+    st.session_state["latest_parsed_data"] = None
 
 # ==========================================================
 # 2. Custom CSS Styling
@@ -55,11 +58,12 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==========================================================
-# 3. Component Initialization
+# 3. Component Initialization (Part 5)
 # ==========================================================
 file_handler = FileHandler()
 resume_parser = ResumeParser()
 question_generator = InterviewQuestionGenerator()
+report_generator = InterviewReportGenerator()
 candidate_scorer = CandidateScorer()
 skill_engine = SkillRecommendationEngine()
 
@@ -112,6 +116,9 @@ tab1, tab2, tab3 = st.tabs(
     ]
 )
 
+# ---------------------------------------------------------
+# TAB 1: Upload & Analyze Only
+# ---------------------------------------------------------
 with tab1:
     st.markdown("### 🚀 Candidate Intake")
     
@@ -146,7 +153,8 @@ with tab1:
                         
                         # Step C: Parse Resume
                         parsed_data = resume_parser.parse_resume(saved_path)
-                        
+                        st.session_state["latest_parsed_data"] = parsed_data
+
                         # Step D: JSON Output View
                         st.markdown(f"### 📄 {uploaded_file.name}")
                         st.json(parsed_data)
@@ -188,7 +196,6 @@ with tab1:
                         # Step G: Skill Recommendation
                         st.markdown("### 🎯 Skill Recommendations")
                         
-                        # Fix Bug 1: Added unique index to widget key
                         target_role = st.selectbox(
                             "Select Target Role for Gap Analysis:",
                             ["ML Engineer", "Data Scientist", "Data Engineer", "Software Engineer"],
@@ -218,32 +225,55 @@ with tab1:
     else:
         st.info("💡 Pro-Tip: Drag multiple resume profiles simultaneously to batch-score your pool.")
 
+# ---------------------------------------------------------
+# TAB 2: Interview Questions Only (Report Generator Integrated)
+# ---------------------------------------------------------
 with tab2:
     st.markdown("### 🎯 Technical Interview Question Generator")
-    st.write("Generate technical interview questions based on candidate skills.")
-
-    # Fix Bug 3: Dynamically merge parsed skills into multi-select defaults
-    default_skill_pool = ["python", "sql", "machine learning", "java", "c++", "docker", "aws"]
-    all_available_skills = list(set(default_skill_pool + st.session_state["parsed_skills"]))
-
-    candidate_skills = st.multiselect(
-        "Select candidate skills",
-        options=all_available_skills,
-        default=st.session_state["parsed_skills"] if st.session_state["parsed_skills"] else None
-    )
-
-    if candidate_skills:
-        questions = question_generator.generate_questions_with_skills(candidate_skills)
-
-        st.success(f"Questions generated for {len(candidate_skills)} skill(s).")
-
-        for skill, skill_questions in questions.items():
-            st.markdown(f"#### 💻 {skill.title()}")
-            for number, question in enumerate(skill_questions, start=1):
-                st.write(f"{number}. {question}")
+    
+    # Check if we have parsed candidate data from tab1 to generate full report
+    if st.session_state["latest_parsed_data"]:
+        interview_report = report_generator.generate_report(st.session_state["latest_parsed_data"])
+        
+        st.markdown("### 🎯 Generated Interview Preparation Report")
+        
+        questions_dict = interview_report.get("interview_questions", {})
+        if questions_dict:
+            for skill, questions in questions_dict.items():
+                st.markdown(f"#### 💻 {skill.title()}")
+                for number, question in enumerate(questions, start=1):
+                    st.write(f"{number}. {question}")
+        else:
+            st.info("No specific skill questions found in the report.")
+            
     else:
-        st.info("Select candidate skills to generate technical interview questions.")
+        # Fallback to interactive skill selector if no resume uploaded yet
+        st.write("Generate technical interview questions based on selected candidate skills.")
 
+        default_skill_pool = ["python", "sql", "machine learning", "java", "c++", "docker", "aws"]
+        all_available_skills = list(set(default_skill_pool + st.session_state["parsed_skills"]))
+
+        candidate_skills = st.multiselect(
+            "Select candidate skills",
+            options=all_available_skills,
+            default=st.session_state["parsed_skills"] if st.session_state["parsed_skills"] else None
+        )
+
+        if candidate_skills:
+            questions = question_generator.generate_questions_with_skills(candidate_skills)
+
+            st.success(f"Questions generated for {len(candidate_skills)} skill(s).")
+
+            for skill, skill_questions in questions.items():
+                st.markdown(f"#### 💻 {skill.title()}")
+                for number, question in enumerate(skill_questions, start=1):
+                    st.write(f"{number}. {question}")
+        else:
+            st.info("Select candidate skills above or upload a resume in Tab 1 to generate interview questions.")
+
+# ---------------------------------------------------------
+# TAB 3: Project Overview
+# ---------------------------------------------------------
 with tab3:
     st.markdown('<div class="section-card">', unsafe_allow_html=True)
     st.markdown("### 🧩 Platform Architecture & Features")
