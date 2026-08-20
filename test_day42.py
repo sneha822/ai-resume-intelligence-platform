@@ -1,92 +1,144 @@
 from src.parser import ResumeParser
-from src.interview_report import (
-    InterviewReportGenerator
+from src.job_description import (
+    JobDescriptionParser
 )
+from src.job_matcher import JobMatcher
 
 
 RESUME_PATH = (
     "data/raw/sample_resume.txt"
 )
 
+JD_PATH = (
+    "data/job_descriptions/"
+    "python_data_engineer.txt"
+)
+
+
+def read_text_file(
+    file_path: str
+) -> str:
+    """Read a text file."""
+
+    with open(
+        file_path,
+        "r",
+        encoding="utf-8"
+    ) as file:
+
+        return file.read()
+
 
 def main() -> None:
 
     print(
-        "=== DAY 42 INTERVIEW REPORT ==="
+        "=== DAY 42: RESUME ↔ JD MATCHING ==="
     )
 
-    # -----------------------------
-    # 1. Parse candidate resume
-    # -----------------------------
+    # ---------------------------------
+    # 1. Parse resume
+    # ---------------------------------
 
-    parser = ResumeParser()
+    resume_parser = ResumeParser()
 
-    candidate = parser.parse_resume(
-        RESUME_PATH
-    )
-
-    print(
-        "\nCandidate Skills:"
-    )
-
-    print(
-        candidate["skills"]
-    )
-
-    # -----------------------------
-    # 2. Generate interview report
-    # -----------------------------
-
-    report_generator = (
-        InterviewReportGenerator()
-    )
-
-    report = (
-        report_generator.generate_report(
-            candidate
+    resume_data = (
+        resume_parser.parse_resume(
+            RESUME_PATH
         )
     )
 
-    # -----------------------------
-    # 3. Display report
-    # -----------------------------
-
-    print(
-        "\n=== INTERVIEW REPORT ==="
+    resume_skills = resume_data.get(
+        "skills",
+        []
     )
 
-    print(
-        f"Email: {report['email']}"
+    # ---------------------------------
+    # 2. Parse job description
+    # ---------------------------------
+
+    job_description = read_text_file(
+        JD_PATH
     )
 
-    print(
-        f"Phone: {report['phone']}"
+    jd_parser = JobDescriptionParser()
+
+    jd_data = (
+        jd_parser.parse_job_description(
+            job_description
+        )
     )
 
-    print(
-        f"Skills: {report['skills']}"
+    jd_keywords = jd_data.get(
+        "keywords",
+        []
     )
 
-    print(
-        "\n--- Technical Questions ---"
+    # ---------------------------------
+    # 3. Match resume against JD
+    # ---------------------------------
+
+    matcher = JobMatcher()
+
+    result = matcher.match(
+        resume_skills,
+        jd_keywords
     )
 
-    for skill, questions in (
-        report["interview_questions"].items()
-    ):
+    # ---------------------------------
+    # 4. Display results
+    # ---------------------------------
+
+    print(
+        "\n--- Resume Skills ---"
+    )
+
+    print(resume_skills)
+
+    print(
+        "\n--- JD Keywords ---"
+    )
+
+    print(jd_keywords)
+
+    print(
+        "\n--- Matching Tokens ---"
+    )
+
+    for token in result[
+        "matched_tokens"
+    ]:
 
         print(
-            f"\n{skill.upper()}"
+            f"✓ {token}"
         )
 
-        for number, question in enumerate(
-            questions,
-            start=1
-        ):
+    print(
+        "\n--- Missing JD Requirements ---"
+    )
 
-            print(
-                f"{number}. {question}"
-            )
+    for token in result[
+        "missing_tokens"
+    ]:
+
+        print(
+            f"✗ {token}"
+        )
+
+    print(
+        "\n--- Additional Resume Skills ---"
+    )
+
+    for token in result[
+        "extra_tokens"
+    ]:
+
+        print(
+            f"+ {token}"
+        )
+
+    print(
+        "\n=== DAY 42 COMPLETE ==="
+    )
 
 
 if __name__ == "__main__":
