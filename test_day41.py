@@ -1,96 +1,68 @@
-from src.parser import ResumeParser
-from src.validation import DataValidator
-from src.interview_question_generator import (
-    InterviewQuestionGenerator
+from src.job_description import (
+    JobDescriptionParser
 )
 
 
-RESUME_PATH = (
-    "data/raw/sample_resume.txt"
+JD_PATH = (
+    "data/job_descriptions/"
+    "python_data_engineer.txt"
 )
+
+
+def read_job_description(
+    file_path: str
+) -> str:
+    """Read job description from a text file."""
+
+    with open(
+        file_path,
+        "r",
+        encoding="utf-8"
+    ) as file:
+
+        return file.read()
 
 
 def main() -> None:
 
-    print("=== DAY 41 END-TO-END TEST ===")
-
-    # --------------------------------
-    # 1. Parse Resume
-    # --------------------------------
-
-    parser = ResumeParser()
-
-    candidate = parser.parse_resume(
-        RESUME_PATH
-    )
-
-    print("\n--- Candidate Data ---")
-
     print(
-        candidate
+        "=== DAY 41: JD PARSING ==="
     )
 
-    # --------------------------------
-    # 2. Validate Candidate
-    # --------------------------------
-
-    validator = DataValidator()
-
-    is_valid = (
-        validator.validate_candidate(
-            candidate
+    job_description = (
+        read_job_description(
+            JD_PATH
         )
     )
 
-    print("\n--- Validation ---")
+    parser = JobDescriptionParser()
 
-    print(
-        f"Valid Candidate: {is_valid}"
-    )
-
-    if not is_valid:
-        raise ValueError(
-            "Candidate failed validation."
-        )
-
-    # --------------------------------
-    # 3. Generate Interview Questions
-    # --------------------------------
-
-    generator = (
-        InterviewQuestionGenerator()
-    )
-
-    questions = (
-        generator.generate_questions_with_skills(
-            candidate["skills"]
+    result = (
+        parser.parse_job_description(
+            job_description
         )
     )
 
     print(
-        "\n--- Interview Questions ---"
+        "\n--- Cleaned Job Description ---"
     )
 
-    for skill, skill_questions in (
-        questions.items()
-    ):
+    print(
+        result["cleaned_text"]
+    )
+
+    print(
+        "\n--- Extracted Keywords ---"
+    )
+
+    for keyword in result["keywords"]:
 
         print(
-            f"\n{skill.upper()}"
+            f"- {keyword}"
         )
 
-        for question in skill_questions:
-
-            print(
-                f"- {question}"
-            )
-
-    # --------------------------------
-    # 4. Final Status
-    # --------------------------------
-
     print(
-        "\n=== END-TO-END TEST PASSED ==="
+        "\n=== JD PARSING COMPLETE ==="
     )
 
 
