@@ -1,0 +1,12 @@
+Aryan Mehta
+
+Email: aryan.mehta@gmail.com
+Phone: 9876543211
+
+Skills:
+Python
+SQL
+Pandas
+NumPy
+Machine Learning
+AWS

@@ -1,5 +1,6 @@
 import os
 import sys
+import pandas as pd
 import streamlit as st
 
 # Fix Python path so 'src' modules can be imported when running from the app directory
@@ -19,11 +20,12 @@ from src.interview_report import InterviewReportGenerator
 from src.scoring import CandidateScorer
 from src.skill_recommender import SkillRecommendationEngine
 
-# Day 41-44 Job Matching Components
+# Day 41-45 Job Matching & Ranking Components
 from src.job_description import JobDescriptionParser
 from src.job_matcher import JobMatcher
 from src.match_scorer import MatchScorer
 from src.match_explainer import MatchExplainer
+from src.candidate_ranker import CandidateRanker
 
 
 # ==========================================================
@@ -104,11 +106,12 @@ report_generator = InterviewReportGenerator()
 candidate_scorer = CandidateScorer()
 skill_engine = SkillRecommendationEngine()
 
-# Day 41-44 Matching Components
+# Day 41-45 Matching & Ranking Components
 jd_parser = JobDescriptionParser()
 job_matcher = JobMatcher()
 match_scorer = MatchScorer()
 match_explainer = MatchExplainer()
+candidate_ranker = CandidateRanker()
 
 
 # ==========================================================
@@ -348,6 +351,9 @@ with tab1:
                         jd_keywords = []
 
 
+                # List to accumulate candidate batch data for Day 45 ranking
+                candidate_results_batch = []
+
                 # --------------------------------------------------
                 # Process each resume
                 # --------------------------------------------------
@@ -571,6 +577,15 @@ with tab1:
                                     )
                                 )
                             )
+
+
+                            # Collect candidate metrics for batch ranking
+                            candidate_email = parsed_data.get("email", uploaded_file.name)
+                            candidate_results_batch.append({
+                                "email": candidate_email,
+                                "match_score": score_report.get("match_score", 0),
+                                "similarity_score": score_report.get("similarity_score", 0)
+                            })
 
 
                             # ------------------------------------------
@@ -833,7 +848,6 @@ with tab1:
                                     )
                                 )
 
-
                         else:
 
                             st.info(
@@ -933,6 +947,28 @@ with tab1:
                             f"{uploaded_file.name}: "
                             f"{str(error)}"
                         )
+
+
+                # ==================================================
+                # DAY 45 — CANDIDATE RANKING (BATCH LEVEL)
+                # ==================================================
+                if candidate_results_batch:
+                    st.markdown("### 🏆 Candidate Ranking")
+                    ranking_df = pd.DataFrame(candidate_results_batch)
+                    ranked_candidates = candidate_ranker.rank_candidates(ranking_df)
+                    
+                    display_columns = [
+                        "job_rank",
+                        "email",
+                        "match_score",
+                        "similarity_score"
+                    ]
+
+                    st.dataframe(
+                        ranked_candidates[display_columns],
+                        use_container_width=True,
+                        hide_index=True
+                    )
 
 
                 st.success(
