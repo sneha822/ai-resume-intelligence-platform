@@ -19,6 +19,7 @@ from src.interview_question_generator import InterviewQuestionGenerator
 from src.interview_report import InterviewReportGenerator
 from src.scoring import CandidateScorer
 from src.skill_recommender import SkillRecommendationEngine
+from src.batch_evaluator import BatchCandidateEvaluator
 
 # Day 41-45 Job Matching & Ranking Components
 from src.job_description import JobDescriptionParser
@@ -63,6 +64,10 @@ if "latest_score_report" not in st.session_state:
 if "latest_match_explanation" not in st.session_state:
     st.session_state["latest_match_explanation"] = None
 
+# Day 46 Leaderboard Session State
+if "leaderboard" not in st.session_state:
+    st.session_state["leaderboard"] = pd.DataFrame()
+
 
 # ==========================================================
 # 2. Custom CSS Styling
@@ -106,12 +111,13 @@ report_generator = InterviewReportGenerator()
 candidate_scorer = CandidateScorer()
 skill_engine = SkillRecommendationEngine()
 
-# Day 41-45 Matching & Ranking Components
+# Day 41-46 Matching, Ranking & Batch Evaluator Components
 jd_parser = JobDescriptionParser()
 job_matcher = JobMatcher()
 match_scorer = MatchScorer()
 match_explainer = MatchExplainer()
 candidate_ranker = CandidateRanker()
+evaluator = BatchCandidateEvaluator()
 
 
 # ==========================================================
@@ -169,9 +175,7 @@ st.markdown(
 
 
 # Calculate dynamic averages
-processed_cnt = st.session_state[
-    "processed_count"
-]
+processed_cnt = st.session_state["processed_count"]
 
 avg_score_val = (
     f"{sum(st.session_state['total_scores']) / processed_cnt:.1f} pts"
@@ -287,22 +291,13 @@ with tab1:
                 "and scoring algorithms..."
             ):
 
-                upload_dir = (
-                    "data/temp_uploads"
-                )
+                upload_dir = "data/temp_uploads"
+                saved_resume_paths = []
 
                 # Reset counts for batch runs
-                st.session_state[
-                    "processed_count"
-                ] = len(uploaded_files)
-
-                st.session_state[
-                    "total_scores"
-                ] = []
-
-                st.session_state[
-                    "parsed_skills"
-                ] = []
+                st.session_state["processed_count"] = len(uploaded_files)
+                st.session_state["total_scores"] = []
+                st.session_state["parsed_skills"] = []
 
 
                 # --------------------------------------------------
@@ -315,31 +310,12 @@ with tab1:
 
                     try:
 
-                        jd_text = (
-                            jd_file
-                            .getvalue()
-                            .decode("utf-8")
-                        )
+                        jd_text = jd_file.getvalue().decode("utf-8")
+                        jd_data = jd_parser.parse_job_description(jd_text)
+                        jd_keywords = jd_data.get("keywords", [])
 
-                        jd_data = (
-                            jd_parser
-                            .parse_job_description(
-                                jd_text
-                            )
-                        )
-
-                        jd_keywords = jd_data.get(
-                            "keywords",
-                            []
-                        )
-
-                        st.markdown(
-                            "#### 📋 JD Keywords"
-                        )
-
-                        st.write(
-                            jd_keywords
-                        )
+                        st.markdown("#### 📋 JD Keywords")
+                        st.write(jd_keywords)
 
                     except Exception as error:
 
@@ -358,9 +334,7 @@ with tab1:
                 # Process each resume
                 # --------------------------------------------------
 
-                for idx, uploaded_file in enumerate(
-                    uploaded_files
-                ):
+                for idx, uploaded_file in enumerate(uploaded_files):
 
                     try:
 
@@ -368,13 +342,11 @@ with tab1:
                         # Step A: Save file
                         # ------------------------------------------
 
-                        saved_path = (
-                            file_handler
-                            .save_uploaded_file(
-                                uploaded_file,
-                                upload_dir
-                            )
+                        saved_path = file_handler.save_uploaded_file(
+                            uploaded_file,
+                            upload_dir
                         )
+                        saved_resume_paths.append(saved_path)
 
 
                         # ------------------------------------------
@@ -383,90 +355,45 @@ with tab1:
 
                         if uploaded_file.type == "text/plain":
 
-                            file_content = (
-                                uploaded_file
-                                .getvalue()
-                                .decode("utf-8")
-                            )
+                            file_content = uploaded_file.getvalue().decode("utf-8")
 
                             with st.expander(
-                                f"👀 Preview Raw Text: "
-                                f"{uploaded_file.name}"
+                                f"👀 Preview Raw Text: {uploaded_file.name}"
                             ):
 
-                                st.text(
-                                    file_content[:1000]
-                                )
+                                st.text(file_content[:1000])
 
 
                         # ------------------------------------------
                         # Step C: Parse Resume
                         # ------------------------------------------
 
-                        parsed_data = (
-                            resume_parser
-                            .parse_resume(
-                                saved_path
-                            )
-                        )
-
-                        st.session_state[
-                            "latest_parsed_data"
-                        ] = parsed_data
+                        parsed_data = resume_parser.parse_resume(saved_path)
+                        st.session_state["latest_parsed_data"] = parsed_data
 
 
                         # ------------------------------------------
                         # Step D: JSON Output
                         # ------------------------------------------
 
-                        st.markdown(
-                            f"### 📄 {uploaded_file.name}"
-                        )
-
-                        st.json(
-                            parsed_data
-                        )
+                        st.markdown(f"### 📄 {uploaded_file.name}")
+                        st.json(parsed_data)
 
 
                         # ------------------------------------------
                         # Step E: Extract Skills
                         # ------------------------------------------
 
-                        candidate_skills = (
-                            parsed_data.get(
-                                "skills",
-                                []
-                            )
-                        )
-
-                        skills_found = len(
-                            candidate_skills
-                        )
-
-                        candidate_level = (
-                            parsed_data.get(
-                                "candidate_level",
-                                "Beginner"
-                            )
-                        )
+                        candidate_skills = parsed_data.get("skills", [])
+                        skills_found = len(candidate_skills)
+                        candidate_level = parsed_data.get("candidate_level", "Beginner")
 
 
                         # Collect parsed skills
                         for skill in candidate_skills:
 
-                            if (
-                                skill.lower()
-                                not in
-                                st.session_state[
-                                    "parsed_skills"
-                                ]
-                            ):
-
-                                st.session_state[
-                                    "parsed_skills"
-                                ].append(
-                                    skill.lower()
-                                )
+                            if skill.lower() not in st.session_state["parsed_skills"]:
+                                st.session_state["parsed_skills"].append(skill.lower())
 
 
                         # ------------------------------------------
@@ -474,8 +401,7 @@ with tab1:
                         # ------------------------------------------
 
                         total_score = (
-                            candidate_scorer
-                            .calculate_total_score(
+                            candidate_scorer.calculate_total_score(
                                 skills_found,
                                 candidate_level
                             )
@@ -483,11 +409,7 @@ with tab1:
                             else 0
                         )
 
-                        st.session_state[
-                            "total_scores"
-                        ].append(
-                            total_score
-                        )
+                        st.session_state["total_scores"].append(total_score)
 
 
                         # ------------------------------------------
@@ -500,10 +422,7 @@ with tab1:
 
                             st.metric(
                                 label="⚡ Extraction Precision",
-                                value=(
-                                    f"{skills_found} "
-                                    f"Skills Found"
-                                ),
+                                value=f"{skills_found} Skills Found",
                                 delta=(
                                     "Structural Match"
                                     if skills_found > 0
@@ -514,17 +433,9 @@ with tab1:
                         with col_b:
 
                             st.metric(
-                                label=(
-                                    "🏆 Candidate / "
-                                    "Employability Score"
-                                ),
-                                value=(
-                                    f"{total_score} pts"
-                                ),
-                                delta=(
-                                    f"Level: "
-                                    f"{candidate_level}"
-                                )
+                                label="🏆 Candidate / Employability Score",
+                                value=f"{total_score} pts",
+                                delta=f"Level: {candidate_level}"
                             )
 
 
@@ -537,23 +448,15 @@ with tab1:
 
                         if jd_keywords:
 
-                            st.markdown(
-                                "### 🔍 Job Match Analysis"
-                            )
+                            st.markdown("### 🔍 Job Match Analysis")
 
                             # ------------------------------------------
                             # Step H: Resume ↔ JD Matching
                             # ------------------------------------------
 
-                            matching_result = (
-                                job_matcher.match(
-                                    resume_skills=(
-                                        candidate_skills
-                                    ),
-                                    job_keywords=(
-                                        jd_keywords
-                                    )
-                                )
+                            matching_result = job_matcher.match(
+                                resume_skills=candidate_skills,
+                                job_keywords=jd_keywords
                             )
 
 
@@ -561,21 +464,10 @@ with tab1:
                             # Step I: Match Scoring
                             # ------------------------------------------
 
-                            score_report = (
-                                match_scorer
-                                .generate_score_report(
-                                    resume_skills=(
-                                        candidate_skills
-                                    ),
-                                    job_keywords=(
-                                        jd_keywords
-                                    ),
-                                    matched_tokens=(
-                                        matching_result[
-                                            "matched_tokens"
-                                        ]
-                                    )
-                                )
+                            score_report = match_scorer.generate_score_report(
+                                resume_skills=candidate_skills,
+                                job_keywords=jd_keywords,
+                                matched_tokens=matching_result["matched_tokens"]
                             )
 
 
@@ -592,261 +484,116 @@ with tab1:
                             # Step J: Match Explanation
                             # ------------------------------------------
 
-                            explanation = (
-                                match_explainer
-                                .explain_match(
-                                    matched_tokens=(
-                                        matching_result[
-                                            "matched_tokens"
-                                        ]
-                                    ),
-                                    missing_tokens=(
-                                        matching_result[
-                                            "missing_tokens"
-                                        ]
-                                    ),
-                                    extra_tokens=(
-                                        matching_result[
-                                            "extra_tokens"
-                                        ]
-                                    ),
-                                    match_score=(
-                                        score_report[
-                                            "match_score"
-                                        ]
-                                    )
-                                )
+                            explanation = match_explainer.explain_match(
+                                matched_tokens=matching_result["matched_tokens"],
+                                missing_tokens=matching_result["missing_tokens"],
+                                extra_tokens=matching_result["extra_tokens"],
+                                match_score=score_report["match_score"]
                             )
 
 
                             # Save results to session state
-                            st.session_state[
-                                "latest_match_result"
-                            ] = matching_result
-
-                            st.session_state[
-                                "latest_score_report"
-                            ] = score_report
-
-                            st.session_state[
-                                "latest_match_explanation"
-                            ] = explanation
+                            st.session_state["latest_match_result"] = matching_result
+                            st.session_state["latest_score_report"] = score_report
+                            st.session_state["latest_match_explanation"] = explanation
 
 
                             # ------------------------------------------
                             # Match Score Cards
                             # ------------------------------------------
 
-                            match_col1, match_col2, match_col3 = (
-                                st.columns(3)
-                            )
+                            match_col1, match_col2, match_col3 = st.columns(3)
 
                             with match_col1:
-
-                                st.metric(
-                                    "🎯 JD Match Score",
-                                    (
-                                        f"{score_report['match_score']}%"
-                                    )
-                                )
+                                st.metric("🎯 JD Match Score", f"{score_report['match_score']}%")
 
                             with match_col2:
-
-                                st.metric(
-                                    "✅ Matched Skills",
-                                    explanation[
-                                        "matched_count"
-                                    ]
-                                )
+                                st.metric("✅ Matched Skills", explanation["matched_count"])
 
                             with match_col3:
-
-                                st.metric(
-                                    "⚠️ Missing Skills",
-                                    explanation[
-                                        "missing_count"
-                                    ]
-                                )
+                                st.metric("⚠️ Missing Skills", explanation["missing_count"])
 
 
                             # ------------------------------------------
                             # Matched Keywords
                             # ------------------------------------------
 
-                            st.markdown(
-                                "#### ✅ Matched JD Keywords"
-                            )
-
-                            matched_tokens = (
-                                matching_result[
-                                    "matched_tokens"
-                                ]
-                            )
+                            st.markdown("#### ✅ Matched JD Keywords")
+                            matched_tokens = matching_result["matched_tokens"]
 
                             if matched_tokens:
-
                                 for skill in matched_tokens:
-
-                                    st.success(
-                                        f"✓ {skill.title()}"
-                                    )
-
+                                    st.success(f"✓ {skill.title()}")
                             else:
-
-                                st.info(
-                                    "No JD keywords matched."
-                                )
+                                st.info("No JD keywords matched.")
 
 
                             # ------------------------------------------
                             # Missing Keywords
                             # ------------------------------------------
 
-                            st.markdown(
-                                "#### ⚠️ Missing JD Keywords"
-                            )
-
-                            missing_tokens = (
-                                matching_result[
-                                    "missing_tokens"
-                                ]
-                            )
+                            st.markdown("#### ⚠️ Missing JD Keywords")
+                            missing_tokens = matching_result["missing_tokens"]
 
                             if missing_tokens:
-
                                 for skill in missing_tokens:
-
-                                    st.warning(
-                                        f"✗ {skill.title()}"
-                                    )
-
+                                    st.warning(f"✗ {skill.title()}")
                             else:
-
-                                st.success(
-                                    "🎉 No required JD "
-                                    "keywords are missing."
-                                )
+                                st.success("🎉 No required JD keywords are missing.")
 
 
                             # ------------------------------------------
                             # Additional Resume Skills
                             # ------------------------------------------
 
-                            st.markdown(
-                                "#### ➕ Additional Resume Skills"
-                            )
-
-                            extra_tokens = (
-                                matching_result[
-                                    "extra_tokens"
-                                ]
-                            )
+                            st.markdown("#### ➕ Additional Resume Skills")
+                            extra_tokens = matching_result["extra_tokens"]
 
                             if extra_tokens:
-
                                 for skill in extra_tokens:
-
-                                    st.info(
-                                        f"+ {skill.title()}"
-                                    )
-
+                                    st.info(f"+ {skill.title()}")
                             else:
-
-                                st.info(
-                                    "No additional skills "
-                                    "outside the JD were detected."
-                                )
+                                st.info("No additional skills outside the JD were detected.")
 
 
                             # ------------------------------------------
                             # Match Breakdown
                             # ------------------------------------------
 
-                            st.markdown(
-                                "#### 📊 Match Breakdown"
-                            )
-
-                            breakdown_col1, breakdown_col2, breakdown_col3 = (
-                                st.columns(3)
-                            )
+                            st.markdown("#### 📊 Match Breakdown")
+                            breakdown_col1, breakdown_col2, breakdown_col3 = st.columns(3)
 
                             with breakdown_col1:
-
-                                st.metric(
-                                    "Required Skills",
-                                    explanation[
-                                        "total_required_skills"
-                                    ]
-                                )
+                                st.metric("Required Skills", explanation["total_required_skills"])
 
                             with breakdown_col2:
-
-                                st.metric(
-                                    "Matched",
-                                    explanation[
-                                        "matched_count"
-                                    ]
-                                )
+                                st.metric("Matched", explanation["matched_count"])
 
                             with breakdown_col3:
-
-                                st.metric(
-                                    "Additional",
-                                    explanation[
-                                        "extra_count"
-                                    ]
-                                )
+                                st.metric("Additional", explanation["extra_count"])
 
 
                             # ------------------------------------------
                             # Explanation
                             # ------------------------------------------
 
-                            st.markdown(
-                                "#### 🧠 Match Explanation"
-                            )
-
-                            summary = (
-                                match_explainer
-                                .generate_summary(
-                                    explanation
-                                )
-                            )
-
-                            st.info(
-                                summary
-                            )
+                            st.markdown("#### 🧠 Match Explanation")
+                            summary = match_explainer.generate_summary(explanation)
+                            st.info(summary)
 
 
                             # ------------------------------------------
                             # Similarity Score
                             # ------------------------------------------
 
-                            st.markdown(
-                                "#### 📐 Similarity Analysis"
-                            )
-
-                            similarity_col1, similarity_col2 = (
-                                st.columns(2)
-                            )
+                            st.markdown("#### 📐 Similarity Analysis")
+                            similarity_col1, similarity_col2 = st.columns(2)
 
                             with similarity_col1:
-
-                                st.metric(
-                                    "Match Score",
-                                    (
-                                        f"{score_report['match_score']}%"
-                                    )
-                                )
+                                st.metric("Match Score", f"{score_report['match_score']}%")
 
                             with similarity_col2:
-
-                                st.metric(
-                                    "Similarity Score",
-                                    (
-                                        f"{score_report['similarity_score']}%"
-                                    )
-                                )
+                                st.metric("Similarity Score", f"{score_report['similarity_score']}%")
 
                         else:
 
@@ -863,9 +610,7 @@ with tab1:
                         # Step K: Skill Recommendation
                         # ------------------------------------------
 
-                        st.markdown(
-                            "### 🎯 Skill Recommendations"
-                        )
+                        st.markdown("### 🎯 Skill Recommendations")
 
                         target_role = st.selectbox(
                             "Select Target Role for Gap Analysis:",
@@ -875,65 +620,30 @@ with tab1:
                                 "Data Engineer",
                                 "Software Engineer"
                             ],
-                            key=(
-                                f"target_role_"
-                                f"{uploaded_file.name}_"
-                                f"{idx}"
-                            )
+                            key=f"target_role_{uploaded_file.name}_{idx}"
                         )
 
 
-                        rec_result = (
-                            skill_engine
-                            .recommend_skills(
-                                candidate_skills,
-                                target_role
-                            )
+                        rec_result = skill_engine.recommend_skills(
+                            candidate_skills,
+                            target_role
                         )
 
 
-                        if isinstance(
-                            rec_result,
-                            dict
-                        ):
-
-                            missing_skills = (
-                                rec_result.get(
-                                    "missing_skills",
-                                    rec_result.get(
-                                        "missing",
-                                        []
-                                    )
-                                )
-                            )
-
+                        if isinstance(rec_result, dict):
+                            missing_skills = rec_result.get("missing_skills", rec_result.get("missing", []))
                         else:
-
-                            missing_skills = (
-                                rec_result
-                            )
+                            missing_skills = rec_result
 
 
                         if missing_skills:
-
-                            st.warning(
-                                f"**Recommended Skills "
-                                f"to Learn for "
-                                f"{target_role}:**"
-                            )
-
+                            st.warning(f"**Recommended Skills to Learn for {target_role}:**")
                             for skill in missing_skills:
-
-                                st.markdown(
-                                    f"- 🔹 **{str(skill).title()}**"
-                                )
-
+                                st.markdown(f"- 🔹 **{str(skill).title()}**")
                         else:
-
                             st.success(
-                                f"🎉 Great match! Candidate "
-                                f"already possesses all key "
-                                f"skills for **{target_role}**."
+                                f"🎉 Great match! Candidate already possesses "
+                                f"all key skills for **{target_role}**."
                             )
 
 
@@ -943,9 +653,7 @@ with tab1:
                     except Exception as error:
 
                         st.error(
-                            f"Error processing "
-                            f"{uploaded_file.name}: "
-                            f"{str(error)}"
+                            f"Error processing {uploaded_file.name}: {str(error)}"
                         )
 
 
@@ -970,16 +678,49 @@ with tab1:
                         hide_index=True
                     )
 
+                # ==================================================
+                # DAY 46 — BATCH EVALUATOR & LEADERBOARD
+                # ==================================================
+                if saved_resume_paths and jd_keywords:
+                    st.session_state["leaderboard"] = evaluator.evaluate_batch(
+                        saved_resume_paths,
+                        jd_keywords
+                    )
 
-                st.success(
-                    "Pipeline processing complete!"
-                )
+
+                st.success("Pipeline processing complete!")
 
     else:
 
         st.info(
             "💡 Pro-Tip: Drag multiple resume profiles "
             "simultaneously to batch-score your pool."
+        )
+
+    # --------------------------------------------------
+    # Day 46 Leaderboard Display
+    # --------------------------------------------------
+    leaderboard = st.session_state["leaderboard"]
+    if not leaderboard.empty:
+        st.markdown("### 🏆 Candidate Leaderboard")
+
+        top_candidate = leaderboard.iloc[0]
+        st.success(f"🏆 Top Candidate: {top_candidate['candidate']} — {top_candidate['match_score']}% Match")
+
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric("Candidates Evaluated", len(leaderboard))
+        with col2:
+            st.metric("Highest Match", f"{top_candidate['match_score']}%")
+        with col3:
+            avg_score = round(leaderboard["match_score"].mean(), 2)
+            st.metric("Average Match", f"{avg_score}%")
+
+        display_cols = ["rank", "candidate", "email", "match_score", "similarity_score"]
+        st.dataframe(
+            leaderboard[display_cols],
+            use_container_width=True,
+            hide_index=True
         )
 
 
@@ -989,62 +730,25 @@ with tab1:
 
 with tab2:
 
-    st.markdown(
-        "### 🎯 Technical Interview Question Generator"
-    )
+    st.markdown("### 🎯 Technical Interview Question Generator")
 
+    if st.session_state["latest_parsed_data"]:
 
-    if st.session_state[
-        "latest_parsed_data"
-    ]:
-
-        interview_report = (
-            report_generator.generate_report(
-                st.session_state[
-                    "latest_parsed_data"
-                ]
-            )
+        interview_report = report_generator.generate_report(
+            st.session_state["latest_parsed_data"]
         )
 
+        st.markdown("### 🎯 Generated Interview Preparation Report")
 
-        st.markdown(
-            "### 🎯 Generated Interview "
-            "Preparation Report"
-        )
-
-
-        questions_dict = interview_report.get(
-            "interview_questions",
-            {}
-        )
-
+        questions_dict = interview_report.get("interview_questions", {})
 
         if questions_dict:
-
-            for skill, questions in (
-                questions_dict.items()
-            ):
-
-                st.markdown(
-                    f"#### 💻 {skill.title()}"
-                )
-
-                for number, question in enumerate(
-                    questions,
-                    start=1
-                ):
-
-                    st.write(
-                        f"{number}. {question}"
-                    )
-
+            for skill, questions in questions_dict.items():
+                st.markdown(f"#### 💻 {skill.title()}")
+                for number, question in enumerate(questions, start=1):
+                    st.write(f"{number}. {question}")
         else:
-
-            st.info(
-                "No specific skill questions "
-                "found in the report."
-            )
-
+            st.info("No specific skill questions found in the report.")
 
     else:
 
@@ -1052,7 +756,6 @@ with tab2:
             "Generate technical interview questions "
             "based on selected candidate skills."
         )
-
 
         default_skill_pool = [
             "python",
@@ -1064,64 +767,32 @@ with tab2:
             "aws"
         ]
 
-
         all_available_skills = list(
-            set(
-                default_skill_pool
-                + st.session_state[
-                    "parsed_skills"
-                ]
-            )
+            set(default_skill_pool + st.session_state["parsed_skills"])
         )
-
 
         candidate_skills = st.multiselect(
             "Select candidate skills",
             options=all_available_skills,
             default=(
-                st.session_state[
-                    "parsed_skills"
-                ]
-                if st.session_state[
-                    "parsed_skills"
-                ]
+                st.session_state["parsed_skills"]
+                if st.session_state["parsed_skills"]
                 else None
             )
         )
 
-
         if candidate_skills:
 
-            questions = (
-                question_generator
-                .generate_questions_with_skills(
-                    candidate_skills
-                )
+            questions = question_generator.generate_questions_with_skills(
+                candidate_skills
             )
 
+            st.success(f"Questions generated for {len(candidate_skills)} skill(s).")
 
-            st.success(
-                f"Questions generated for "
-                f"{len(candidate_skills)} skill(s)."
-            )
-
-
-            for skill, skill_questions in (
-                questions.items()
-            ):
-
-                st.markdown(
-                    f"#### 💻 {skill.title()}"
-                )
-
-                for number, question in enumerate(
-                    skill_questions,
-                    start=1
-                ):
-
-                    st.write(
-                        f"{number}. {question}"
-                    )
+            for skill, skill_questions in questions.items():
+                st.markdown(f"#### 💻 {skill.title()}")
+                for number, question in enumerate(skill_questions, start=1):
+                    st.write(f"{number}. {question}")
 
         else:
 
@@ -1138,14 +809,8 @@ with tab2:
 
 with tab3:
 
-    st.markdown(
-        '<div class="section-card">',
-        unsafe_allow_html=True
-    )
-
-    st.markdown(
-        "### 🧩 Platform Architecture & Features"
-    )
+    st.markdown('<div class="section-card">', unsafe_allow_html=True)
+    st.markdown("### 🧩 Platform Architecture & Features")
 
     st.write("""
     This engineering platform orchestrates structural resume analysis,
@@ -1153,10 +818,7 @@ with tab3:
     thresholds programmatically, and automatically engineers analytical assets.
     """)
 
-
-    st.markdown(
-        "#### Core Subsystems Running:"
-    )
+    st.markdown("#### Core Subsystems Running:")
 
     st.markdown("""
     * **Automated Extraction Pipeline:** Validates schema consistency.
@@ -1173,9 +835,7 @@ with tab3:
       and additional skills.
     * **Skill Recommendation Engine:** Identifies candidate skill gaps
       against industry target roles.
+    * **Batch Candidate Evaluator:** Ranks candidate pools and computes batch leaderboards.
     """)
 
-    st.markdown(
-        '</div>',
-        unsafe_allow_html=True
-    )
+    st.markdown('</div>', unsafe_allow_html=True)

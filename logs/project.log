@@ -68,3 +68,7 @@ Traceback (most recent call last):
     self._sock.shutdown(socket.SHUT_RDWR)
     ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
 ConnectionResetError: [WinError 10054] An existing connection was forcibly closed by the remote host
+2026-08-21 21:15:36,672 - ERROR - Error reading file data/raw/candidate2.txt: [Errno 2] No such file or directory: 'data/raw/candidate2.txt'
+2026-08-21 21:15:36,673 - ERROR - Error encountered during resume parsing execution: [Errno 2] No such file or directory: 'data/raw/candidate2.txt'
+2026-08-21 21:15:36,673 - ERROR - Error reading file data/raw/candidate3.txt: [Errno 2] No such file or directory: 'data/raw/candidate3.txt'
+2026-08-21 21:15:36,673 - ERROR - Error encountered during resume parsing execution: [Errno 2] No such file or directory: 'data/raw/candidate3.txt'
