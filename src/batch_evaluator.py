@@ -8,7 +8,7 @@ from src.logger import logger
 
 
 class BatchCandidateEvaluator:
-    """Evaluate multiple resumes against one job description."""
+    """Evaluate and rank multiple candidates for one JD with robust error safeguards."""
 
     def __init__(self) -> None:
         self.resume_parser = ResumeParser()
@@ -20,139 +20,77 @@ class BatchCandidateEvaluator:
         file_path: str,
         job_keywords: list
     ) -> dict:
-        """
-        Evaluate one candidate against a job description.
-        """
+        """Evaluate one candidate against a job description with input validation."""
 
         # ------------------------------------------
-        # File validation
+        # File & Input Validation
         # ------------------------------------------
-
         if not file_path:
-            raise ValueError(
-                "Resume file path is empty."
-            )
+            raise ValueError("Resume file path is empty.")
 
         if not os.path.exists(file_path):
-            raise FileNotFoundError(
-                f"Resume file not found: {file_path}"
-            )
+            raise FileNotFoundError(f"Resume file not found: {file_path}")
 
         if not job_keywords:
-            raise ValueError(
-                "Job description contains no keywords."
-            )
+            raise ValueError("Job description contains no keywords.")
 
-        logger.info(
-            f"Starting candidate evaluation: {file_path}"
-        )
+        logger.info(f"Starting candidate evaluation: {file_path}")
 
         # ------------------------------------------
-        # Resume parsing
+        # Resume Parsing
         # ------------------------------------------
-
-        candidate_data = (
-            self.resume_parser.parse_resume(
-                file_path
-            )
-        )
+        candidate_data = self.resume_parser.parse_resume(file_path)
 
         if not candidate_data:
-            raise ValueError(
-                "Resume parser returned empty data."
-            )
+            raise ValueError("Resume parser returned empty data.")
 
-        email = candidate_data.get(
-            "email"
-        )
-
-        skills = candidate_data.get(
-            "skills",
-            []
-        )
+        email = candidate_data.get("email")
+        skills = candidate_data.get("skills", [])
 
         # ------------------------------------------
-        # Candidate validation
+        # Candidate Warnings & Logging
         # ------------------------------------------
-
         if not email:
-            logger.warning(
-                f"No email detected in resume: {file_path}"
-            )
+            logger.warning(f"No email detected in resume: {file_path}")
 
         if not skills:
-            logger.warning(
-                f"No skills detected in resume: {file_path}"
-            )
+            logger.warning(f"No skills detected in resume: {file_path}")
 
         # ------------------------------------------
-        # Matching
+        # Matching Engine
         # ------------------------------------------
-
-        matching_result = self.matcher.match(
-            skills,
-            job_keywords
-        )
+        matching_result = self.matcher.match(skills, job_keywords)
 
         if not matching_result:
-            raise ValueError(
-                "Matching engine returned no result."
-            )
+            raise ValueError("Matching engine returned no result.")
 
-        matched_tokens = matching_result.get(
-            "matched_tokens",
-            []
-        )
-
-        missing_tokens = matching_result.get(
-            "missing_tokens",
-            []
-        )
+        matched_tokens = matching_result.get("matched_tokens", [])
+        missing_tokens = matching_result.get("missing_tokens", [])
 
         # ------------------------------------------
-        # Scoring
+        # Scoring Engine
         # ------------------------------------------
-
-        score_report = (
-            self.scorer.generate_score_report(
-                skills,
-                job_keywords,
-                matched_tokens
-            )
+        score_report = self.scorer.generate_score_report(
+            skills,
+            job_keywords,
+            matched_tokens
         )
 
         if not score_report:
-            raise ValueError(
-                "Scoring engine returned no result."
-            )
+            raise ValueError("Scoring engine returned no result.")
 
-        match_score = score_report.get(
-            "match_score",
-            0
-        )
+        match_score = score_report.get("match_score", 0)
+        similarity_score = score_report.get("similarity_score", 0)
 
-        similarity_score = score_report.get(
-            "similarity_score",
-            0
-        )
-
-        logger.info(
-            f"Candidate evaluation completed: {file_path}"
-        )
+        logger.info(f"Candidate evaluation completed successfully: {file_path}")
 
         return {
-            "candidate": os.path.basename(
-                file_path
-            ),
+            "candidate": os.path.basename(file_path),
             "email": email or "Not detected",
             "match_score": match_score,
             "similarity_score": similarity_score,
-            "matched_skills": ", ".join(
-                matched_tokens
-            ),
-            "missing_skills": ", ".join(
-                missing_tokens
-            ),
+            "matched_skills": ", ".join(matched_tokens),
+            "missing_skills": ", ".join(missing_tokens),
             "status": "Success",
             "error": ""
         }
@@ -162,113 +100,56 @@ class BatchCandidateEvaluator:
         file_paths: list,
         job_keywords: list
     ) -> pd.DataFrame:
-        """
-        Evaluate an entire batch of candidates.
-
-        One failed candidate does not stop
-        the remaining candidates.
-        """
+        """Evaluate an entire batch of candidates independently without halting on errors."""
 
         if not file_paths:
-            logger.warning(
-                "Batch evaluation requested with no resumes."
-            )
-
+            logger.warning("Batch evaluation requested with no resumes.")
             return pd.DataFrame()
 
         if not job_keywords:
-            logger.error(
-                "Batch evaluation stopped: "
-                "no JD keywords available."
-            )
-
-            raise ValueError(
-                "Cannot evaluate candidates "
-                "without JD keywords."
-            )
+            logger.error("Batch evaluation stopped: No JD keywords available.")
+            raise ValueError("Cannot evaluate candidates without JD keywords.")
 
         results = []
-
-        logger.info(
-            f"Starting batch evaluation for "
-            f"{len(file_paths)} candidates."
-        )
+        logger.info(f"Starting batch evaluation for {len(file_paths)} candidate(s).")
 
         for file_path in file_paths:
-
             try:
-
-                result = self.evaluate_candidate(
-                    file_path,
-                    job_keywords
-                )
-
-                results.append(
-                    result
-                )
-
+                result = self.evaluate_candidate(file_path, job_keywords)
+                results.append(result)
             except Exception as error:
+                logger.error(f"Failed to evaluate candidate {file_path}: {error}")
+                results.append({
+                    "candidate": os.path.basename(file_path),
+                    "email": "Not available",
+                    "match_score": 0.0,
+                    "similarity_score": 0.0,
+                    "matched_skills": "",
+                    "missing_skills": "",
+                    "status": "Failed",
+                    "error": str(error)
+                })
 
-                logger.error(
-                    f"Failed to evaluate "
-                    f"{file_path}: {error}"
-                )
-
-                results.append(
-                    {
-                        "candidate": os.path.basename(
-                            file_path
-                        ),
-                        "email": "Not available",
-                        "match_score": 0.0,
-                        "similarity_score": 0.0,
-                        "matched_skills": "",
-                        "missing_skills": "",
-                        "status": "Failed",
-                        "error": str(error)
-                    }
-                )
-
-        dataframe = pd.DataFrame(
-            results
-        )
+        dataframe = pd.DataFrame(results)
 
         if dataframe.empty:
-            logger.warning(
-                "Batch evaluation produced no results."
-            )
-
+            logger.warning("Batch evaluation produced no results.")
             return dataframe
 
-        # ------------------------------------------
-        # Rank successful results
-        # ------------------------------------------
-
+        # Sort candidates by match_score while preserving ranks
         dataframe = dataframe.sort_values(
             by="match_score",
             ascending=False
-        ).reset_index(
-            drop=True
-        )
+        ).reset_index(drop=True)
 
-        dataframe["rank"] = (
-            dataframe.index + 1
-        )
+        dataframe["rank"] = dataframe.index + 1
 
-        successful = (
-            dataframe["status"]
-            == "Success"
-        ).sum()
-
-        failed = (
-            dataframe["status"]
-            == "Failed"
-        ).sum()
+        successful_count = (dataframe["status"] == "Success").sum()
+        failed_count = (dataframe["status"] == "Failed").sum()
 
         logger.info(
             f"Batch evaluation completed. "
-            f"Successful: {successful}, "
-            f"Failed: {failed}"
+            f"Successful: {successful_count}, Failed: {failed_count}."
         )
 
         return dataframe

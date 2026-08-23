@@ -72,3 +72,34 @@ ConnectionResetError: [WinError 10054] An existing connection was forcibly close
 2026-08-21 21:15:36,673 - ERROR - Error encountered during resume parsing execution: [Errno 2] No such file or directory: 'data/raw/candidate2.txt'
 2026-08-21 21:15:36,673 - ERROR - Error reading file data/raw/candidate3.txt: [Errno 2] No such file or directory: 'data/raw/candidate3.txt'
 2026-08-21 21:15:36,673 - ERROR - Error encountered during resume parsing execution: [Errno 2] No such file or directory: 'data/raw/candidate3.txt'
+2026-08-23 07:36:20,467 - INFO - Starting batch evaluation for 8 candidates.
+2026-08-23 07:36:20,468 - INFO - Starting candidate evaluation: data/raw\broken_resume.txt
+2026-08-23 07:36:20,471 - WARNING - No skills detected in resume: data/raw\broken_resume.txt
+2026-08-23 07:36:20,471 - INFO - Candidate evaluation completed: data/raw\broken_resume.txt
+2026-08-23 07:36:20,471 - INFO - Starting candidate evaluation: data/raw\candidate2.txt
+2026-08-23 07:36:20,473 - INFO - Candidate evaluation completed: data/raw\candidate2.txt
+2026-08-23 07:36:20,474 - INFO - Starting candidate evaluation: data/raw\candidate3.txt
+2026-08-23 07:36:20,475 - INFO - Candidate evaluation completed: data/raw\candidate3.txt
+2026-08-23 07:36:20,475 - INFO - Starting candidate evaluation: data/raw\candidate_1.txt
+2026-08-23 07:36:20,476 - INFO - Candidate evaluation completed: data/raw\candidate_1.txt
+2026-08-23 07:36:20,476 - INFO - Starting candidate evaluation: data/raw\candidate_2.txt
+2026-08-23 07:36:20,477 - INFO - Candidate evaluation completed: data/raw\candidate_2.txt
+2026-08-23 07:36:20,477 - INFO - Starting candidate evaluation: data/raw\candidate_3.txt
+2026-08-23 07:36:20,478 - WARNING - No skills detected in resume: data/raw\candidate_3.txt
+2026-08-23 07:36:20,478 - INFO - Candidate evaluation completed: data/raw\candidate_3.txt
+2026-08-23 07:36:20,478 - INFO - Starting candidate evaluation: data/raw\candidate_4.txt
+2026-08-23 07:36:20,479 - INFO - Candidate evaluation completed: data/raw\candidate_4.txt
+2026-08-23 07:36:20,479 - INFO - Starting candidate evaluation: data/raw\sample_resume.txt
+2026-08-23 07:36:20,480 - INFO - Candidate evaluation completed: data/raw\sample_resume.txt
+2026-08-23 07:36:20,543 - INFO - Batch evaluation completed. Successful: 8, Failed: 0
+2026-08-23 07:47:02,797 - INFO - Starting batch evaluation for 1 candidates.
+2026-08-23 07:47:02,798 - INFO - Starting candidate evaluation: data/temp_uploads\Sneha_Kumari_Resume (2).pdf
+2026-08-23 07:47:03,234 - INFO - Candidate evaluation completed: data/temp_uploads\Sneha_Kumari_Resume (2).pdf
+2026-08-23 07:47:03,244 - INFO - Batch evaluation completed. Successful: 1, Failed: 0
+2026-08-23 07:50:15,453 - INFO - Starting batch evaluation for 2 candidates.
+2026-08-23 07:50:15,453 - INFO - Starting candidate evaluation: data/temp_uploads\Sneha_Kumari_Resume (2).pdf
+2026-08-23 07:50:15,979 - INFO - Candidate evaluation completed: data/temp_uploads\Sneha_Kumari_Resume (2).pdf
+2026-08-23 07:50:15,980 - INFO - Starting candidate evaluation: data/temp_uploads\B.TECH.IV SEM.2019 (1).pdf
+2026-08-23 07:50:16,187 - WARNING - No skills detected in resume: data/temp_uploads\B.TECH.IV SEM.2019 (1).pdf
+2026-08-23 07:50:16,187 - INFO - Candidate evaluation completed: data/temp_uploads\B.TECH.IV SEM.2019 (1).pdf
+2026-08-23 07:50:16,194 - INFO - Batch evaluation completed. Successful: 2, Failed: 0
