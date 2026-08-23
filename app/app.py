@@ -700,28 +700,90 @@ with tab1:
     # --------------------------------------------------
     # Day 46 Leaderboard Display
     # --------------------------------------------------
-    leaderboard = st.session_state["leaderboard"]
-    if not leaderboard.empty:
-        st.markdown("### 🏆 Candidate Leaderboard")
+   # ----------------------------------------------
+# Display Leaderboard & Error Handling (Day 47)
+# ----------------------------------------------
+leaderboard = st.session_state.get("leaderboard")
 
-        top_candidate = leaderboard.iloc[0]
-        st.success(f"🏆 Top Candidate: {top_candidate['candidate']} — {top_candidate['match_score']}% Match")
+if leaderboard is not None and not leaderboard.empty:
+    st.markdown("---")
+    st.markdown("### 🏆 Candidate Leaderboard")
 
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            st.metric("Candidates Evaluated", len(leaderboard))
-        with col2:
-            st.metric("Highest Match", f"{top_candidate['match_score']}%")
-        with col3:
-            avg_score = round(leaderboard["match_score"].mean(), 2)
-            st.metric("Average Match", f"{avg_score}%")
+    # Filter out failed candidates safely (prevents NameError)
+    if "error" in leaderboard.columns:
+        failed_candidates = leaderboard[
+            leaderboard["error"].notna() & (leaderboard["error"] != "")
+        ]
+        successful_candidates = leaderboard[
+            leaderboard["error"].isna() | (leaderboard["error"] == "")
+        ]
+    else:
+        failed_candidates = pd.DataFrame()
+        successful_candidates = leaderboard
 
-        display_cols = ["rank", "candidate", "email", "match_score", "similarity_score"]
-        st.dataframe(
-            leaderboard[display_cols],
-            use_container_width=True,
-            hide_index=True
+    # Display Top Candidate if any succeeded
+    if not successful_candidates.empty:
+        top_candidate = successful_candidates.iloc[0]
+        st.success(
+            f"🏆 Top Candidate: {top_candidate['candidate']} — "
+            f"{top_candidate['match_score']}% Match"
         )
+
+    # Summary Metrics
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.metric("Candidates Evaluated", len(leaderboard))
+    with col2:
+        highest = (
+            f"{successful_candidates.iloc[0]['match_score']}%"
+            if not successful_candidates.empty
+            else "N/A"
+        )
+        st.metric("Highest Match", highest)
+    with col3:
+        avg = (
+            f"{round(successful_candidates['match_score'].mean(), 2)}%"
+            if not successful_candidates.empty
+            else "N/A"
+        )
+        st.metric("Average Match", avg)
+
+    st.markdown("---")
+
+    # ------------------------------------------
+    # Ranking Table with Status
+    # ------------------------------------------
+    st.markdown("#### 📊 Ranking Results")
+
+    # Add status column dynamically if present
+    display_columns = [
+        "rank",
+        "candidate",
+        "email",
+        "match_score",
+        "similarity_score",
+        "status",
+    ]
+    available_columns = [
+        col for col in display_columns if col in leaderboard.columns
+    ]
+
+    st.dataframe(
+        leaderboard[available_columns],
+        use_container_width=True,
+        hide_index=True,
+    )
+
+    # ------------------------------------------
+    # Failed Candidates Section
+    # ------------------------------------------
+    if not failed_candidates.empty:
+        st.warning(f"⚠️ {len(failed_candidates)} Candidate(s) Failed Processing")
+        with st.expander("View Failed Candidate Details"):
+            for _, failed_row in failed_candidates.iterrows():
+                st.error(
+                    f"**{failed_row['candidate']}**: {failed_row.get('error', 'Unknown Error')}"
+                )
 
 
 # ==========================================================
