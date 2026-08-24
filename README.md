@@ -1,60 +1,120 @@
-# 📄 AI Resume Intelligence Platform & Interview Copilot
+# AI Resume Intelligence & Interview Copilot
 
-An end-to-end machine learning platform that parses resume files, extracts structured candidate features, stores applicant data, and utilizes Machine Learning to automatically classify candidate experience levels and roles while generating tailored interview paths.
+An end-to-end resume intelligence platform that analyzes
+candidate profiles against job descriptions, extracts
+relevant skills, calculates compatibility scores, and
+ranks candidates for a specific role.
 
----
+## 🚀 Features
 
-## 🛠️ Features & Subsystems
+- Resume parsing
+- Email and phone extraction
+- Skill extraction
+- Job description keyword extraction
+- Resume ↔ JD token matching
+- Similarity scoring
+- Match-score calculation
+- Match explanation
+- Candidate ranking
+- Batch candidate evaluation
+- Error handling and logging
+- Interactive Streamlit dashboard
 
-*   ✅ **Resume Intake & Advanced Parsing:** Upload and parse raw `.pdf` (using `pdfplumber` and `PyPDF2`) and `.txt` resume files.
-*   ✅ **Feature Extraction:** Extracts key numerical features including skill count, experience years, project count, and certifications.
-*   ✅ **Candidate Database & Search:** Programmatic storage and candidate search functionality.
-*   ✅ **Dataset & ML Pipeline:** Automated dataset generation, statistics calculation, train/test split, and trained Logistic Regression model for candidate classification.
-*   ✅ **Interview Question Generator:** Rule-based technical question generation mapped directly from candidate skills.
-*   ✅ **Interactive Streamlit Dashboard:** Multi-tab frontend UI for resume uploads, real-time metrics, live extraction visualization, and question generation.
+## 🏗️ Architecture
 
----
+Resume
+  ↓
+Resume Parser
+  ↓
+Skill Extraction
+  ↓
+Job Description Parser
+  ↓
+Keyword Matching
+  ↓
+Similarity Scoring
+  ↓
+Candidate Ranking
+  ↓
+Batch Evaluation
+  ↓
+Streamlit Dashboard
 
-## 🧠 Machine Learning Overview
+## 🛠️ Tech Stack
 
-*   **Model:** Logistic Regression (`scikit-learn`)
-*   **Target:** Candidate Experience Level Classification (`candidate_level`)
-*   **Input Features:** 
-    *   `skill_count`
-    *   `experience_years`
-    *   `project_count`
-    *   `certification_count`
-*   **Model Serialization:** Serialized artifact saved to `models/role_classifier.pkl` via `joblib`.
-
----
+- Python
+- Pandas
+- SQLite
+- Streamlit
+- Scikit-learn
+- Git & GitHub
 
 ## 📂 Project Structure
 
-```text
-ai-resume-platform/
-│
-├── app/
-│   └── app.py                            # Streamlit Frontend UI
-│
-├── src/
-│   ├── parser.py                         # Resume parsing engine (PyPDF2 & pdfplumber)
-│   ├── feature_extractor.py              # Numerical feature extraction
-│   ├── dataset_builder.py                # Formats candidate dataset
-│   ├── dataset_statistics.py             # Dynamic dataset metrics calculation
-│   ├── data_splitter.py                  # Train/Test splitting utility
-│   ├── database.py                       # Storage handler
-│   ├── search.py                         # Candidate search logic
-│   ├── model_trainer.py                  # Logistic Regression trainer
-│   └── interview_question_generator.py   # Skill-to-question generator module
-│
-├── models/
-│   └── role_classifier.pkl               # Serialized trained ML model
-│
+ai-resume-intelligence-platform/
+
+├── app.py
+├── config.py
+├── requirements.txt
+├── README.md
 ├── data/
-│   ├── temp_uploads/                     # Staging directory for uploaded files
-│   ├── processed_candidates.csv
-│   ├── train_candidates.csv
-│   └── test_candidates.csv
-│
-├── requirements.txt                      # Project dependencies
-└── README.md                             # Platform documentation
+├── src/
+└── tests/
+
+## ⚙️ Installation
+
+Clone the repository:
+
+git clone <your-repository-url>
+
+Create an environment:
+
+python -m venv .venv
+
+Activate the environment.
+
+Install dependencies:
+
+pip install -r requirements.txt
+
+## ▶️ Run the Application
+
+streamlit run app.py
+
+## 📊 Pipeline
+
+1. Upload resumes
+2. Parse candidate information
+3. Upload/select a job description
+4. Extract JD keywords
+5. Match candidate skills
+6. Calculate match scores
+7. Rank candidates
+8. Review candidate explanations
+
+## 🧪 Testing
+
+The project contains day-by-day testing scripts covering:
+
+- Resume parsing
+- Feature engineering
+- Scoring
+- JD parsing
+- Matching
+- Ranking
+- Batch evaluation
+- Error handling
+- End-to-end integration
+
+## 🎯 Project Goal
+
+The goal of this project is to build an engineering-focused
+resume intelligence system that demonstrates practical
+application of data processing, NLP-style text matching,
+scoring systems, backend logic, and interactive deployment.
+
+## 👩‍💻 Author
+
+Sneha Kumari
+
+B.Tech — Electronics & Communication Engineering
