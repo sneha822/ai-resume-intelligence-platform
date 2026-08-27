@@ -19,3 +19,5 @@ Thumbs.db
 # ==========================================================
 data/temp_uploads/*
 data/uploads/*
+*.log
+logs/
