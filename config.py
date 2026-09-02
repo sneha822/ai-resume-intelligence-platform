@@ -1,5 +1,7 @@
 import os
 
+USE_AI_PARSER = os.getenv("USE_AI_PARSER", "true").lower() == "true"
+
 
 BASE_DIR = os.path.dirname(
     os.path.abspath(__file__)
