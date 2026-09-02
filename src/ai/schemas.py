@@ -1,15 +1,28 @@
-from dataclasses import dataclass, field
-from typing import List, Optional
+from dataclasses import (
+    asdict,
+    dataclass,
+    field
+)
+
+from typing import (
+    List,
+    Optional
+)
 
 
 @dataclass
 class Experience:
+
     company: Optional[str] = None
+
     role: Optional[str] = None
+
     duration: Optional[str] = None
+
     responsibilities: List[str] = field(
         default_factory=list
     )
+
     achievements: List[str] = field(
         default_factory=list
     )
@@ -17,16 +30,23 @@ class Experience:
 
 @dataclass
 class Education:
+
     degree: Optional[str] = None
+
     field: Optional[str] = None
+
     institution: Optional[str] = None
+
     graduation_year: Optional[str] = None
 
 
 @dataclass
 class CandidateProfile:
+
     name: Optional[str] = None
+
     email: Optional[str] = None
+
     phone: Optional[str] = None
 
     skills: List[str] = field(
@@ -48,3 +68,57 @@ class CandidateProfile:
     projects: List[str] = field(
         default_factory=list
     )
+
+    def to_dict(self) -> dict:
+        """Convert profile into a dictionary."""
+
+        return asdict(self)
+
+    @classmethod
+    def from_dict(
+        cls,
+        data: dict
+    ):
+        """Create profile from dictionary."""
+
+        experience_data = data.get(
+            "experience",
+            []
+        )
+
+        education_data = data.get(
+            "education",
+            []
+        )
+
+        experience = [
+            Experience(**item)
+            for item in experience_data
+            if isinstance(item, dict)
+        ]
+
+        education = [
+            Education(**item)
+            for item in education_data
+            if isinstance(item, dict)
+        ]
+
+        return cls(
+            name=data.get("name"),
+            email=data.get("email"),
+            phone=data.get("phone"),
+            skills=data.get(
+                "skills",
+                []
+            ),
+            experience=experience,
+            education=education,
+            certifications=data.get(
+                "certifications",
+                []
+            ),
+            projects=data.get(
+                "projects",
+                []
+            )
+        )
