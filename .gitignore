@@ -21,3 +21,6 @@ data/temp_uploads/*
 data/uploads/*
 *.log
 logs/
+
+.env
+.streamlit/secrets.toml
