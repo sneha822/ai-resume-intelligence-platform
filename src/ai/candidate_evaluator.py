@@ -39,7 +39,6 @@ class CandidateEvaluator:
         return CandidateEvaluation.from_dict(data)
 
     def evaluate(self, candidate, job_description):
-
         if not candidate:
             raise ValueError("Candidate profile cannot be empty.")
 
@@ -58,4 +57,34 @@ class CandidateEvaluator:
             system_prompt=CANDIDATE_EVALUATION_SYSTEM_PROMPT
         )
 
-        return self.parse_response(response)
+        evaluation = self.parse_response(response)
+        return self._validate_evidence(evaluation)
+
+    def _validate_evidence(self, evaluation):
+        for item in evaluation.strength_evidence:
+            claim = item.claim if hasattr(item, "claim") else item.get("claim", "")
+            evidence = item.evidence if hasattr(item, "evidence") else item.get("evidence", "")
+
+            if not str(claim).strip():
+                raise ValueError(
+                    "Strength evidence contains empty claim."
+                )
+            if not str(evidence).strip():
+                raise ValueError(
+                    "Strength evidence contains empty evidence."
+                )
+
+        for item in evaluation.gap_evidence:
+            claim = item.claim if hasattr(item, "claim") else item.get("claim", "")
+            evidence = item.evidence if hasattr(item, "evidence") else item.get("evidence", "")
+
+            if not str(claim).strip():
+                raise ValueError(
+                    "Gap evidence contains empty claim."
+                )
+            if not str(evidence).strip():
+                raise ValueError(
+                    "Gap evidence contains empty evidence."
+                )
+
+        return evaluation

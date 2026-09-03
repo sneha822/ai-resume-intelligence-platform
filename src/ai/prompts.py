@@ -50,7 +50,10 @@ Rules:
    question, say so.
 5. Do not make protected-attribute hiring decisions.
 """
-def build_candidate_evaluation_prompt(candidate, job_description):
+def build_candidate_evaluation_prompt(
+    candidate,
+    job_description
+):
     return f"""
 Evaluate the candidate against the job description.
 
@@ -67,6 +70,23 @@ Return ONLY valid JSON using exactly this structure:
     "fit_level": "",
     "strengths": [],
     "skill_gaps": [],
+
+    "strength_evidence": [
+        {{
+            "claim": "",
+            "evidence": "",
+            "category": ""
+        }}
+    ],
+
+    "gap_evidence": [
+        {{
+            "claim": "",
+            "evidence": "",
+            "category": ""
+        }}
+    ],
+
     "experience_fit": "",
     "technical_fit": "",
     "reasoning": ""
@@ -75,14 +95,46 @@ Return ONLY valid JSON using exactly this structure:
 Evaluation rules:
 
 1. Score the candidate from 0 to 100.
-2. Base the evaluation only on evidence in the candidate profile.
-3. Do not invent skills, experience, education, or achievements.
-4. Distinguish demonstrated experience from assumptions.
-5. Consider technical skills, experience, projects, education,
-   certifications, and relevant achievements.
-6. Compare the candidate against the actual requirements of the job.
-7. Identify meaningful skill gaps.
-8. Keep the reasoning concise but evidence-based.
-9. Do not use protected personal characteristics in the evaluation.
-10. Return valid JSON only.
+
+2. Base the evaluation only on evidence present
+   in the candidate profile.
+
+3. Never invent skills, experience, projects,
+   achievements, education, or certifications.
+
+4. Strengths must be relevant to the job description.
+
+5. For every important strength, provide supporting
+   evidence from the candidate profile.
+
+6. For every important skill gap, identify the relevant
+   job requirement and explain what evidence is missing
+   from the candidate profile.
+
+7. Do not claim that a candidate lacks a skill simply
+   because it was not explicitly mentioned if the
+   available evidence reasonably demonstrates it.
+   When evidence is insufficient, say so.
+
+8. Distinguish clearly between:
+   - demonstrated evidence
+   - reasonable inference
+   - missing evidence
+
+9. Preserve measurable achievements when they are relevant.
+
+10. Consider:
+    - technical skills
+    - experience
+    - projects
+    - education
+    - certifications
+    - demonstrated achievements
+
+11. Do not use protected personal characteristics
+    in the evaluation.
+
+12. Keep reasoning concise and evidence-based.
+
+13. Return valid JSON only.
 """
