@@ -50,3 +50,39 @@ Rules:
    question, say so.
 5. Do not make protected-attribute hiring decisions.
 """
+def build_candidate_evaluation_prompt(candidate, job_description):
+    return f"""
+Evaluate the candidate against the job description.
+
+CANDIDATE PROFILE:
+{candidate}
+
+JOB DESCRIPTION:
+{job_description}
+
+Return ONLY valid JSON using exactly this structure:
+
+{{
+    "overall_score": 0,
+    "fit_level": "",
+    "strengths": [],
+    "skill_gaps": [],
+    "experience_fit": "",
+    "technical_fit": "",
+    "reasoning": ""
+}}
+
+Evaluation rules:
+
+1. Score the candidate from 0 to 100.
+2. Base the evaluation only on evidence in the candidate profile.
+3. Do not invent skills, experience, education, or achievements.
+4. Distinguish demonstrated experience from assumptions.
+5. Consider technical skills, experience, projects, education,
+   certifications, and relevant achievements.
+6. Compare the candidate against the actual requirements of the job.
+7. Identify meaningful skill gaps.
+8. Keep the reasoning concise but evidence-based.
+9. Do not use protected personal characteristics in the evaluation.
+10. Return valid JSON only.
+"""
