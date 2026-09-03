@@ -9,6 +9,39 @@ from typing import (
     Optional
 )
 
+@dataclass
+class CandidateEvaluation:
+    overall_score: float
+    fit_level: str
+    strengths: list[str] = field(default_factory=list)
+    skill_gaps: list[str] = field(default_factory=list)
+    experience_fit: str = ""
+    technical_fit: str = ""
+    reasoning: str = ""
+
+    def to_dict(self):
+        return asdict(self)
+
+    @classmethod
+    def from_dict(cls, data):
+
+        score = float(data.get("overall_score", 0))
+
+        if score < 0 or score > 100:
+            raise ValueError(
+                "overall_score must be between 0 and 100."
+            )
+
+        return cls(
+            overall_score=score,
+            fit_level=data.get("fit_level", ""),
+            strengths=data.get("strengths", []),
+            skill_gaps=data.get("skill_gaps", []),
+            experience_fit=data.get("experience_fit", ""),
+            technical_fit=data.get("technical_fit", ""),
+            reasoning=data.get("reasoning", "")
+        )
+
 
 @dataclass
 class Experience:
