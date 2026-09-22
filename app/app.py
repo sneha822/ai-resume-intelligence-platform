@@ -2,6 +2,7 @@ import os
 import sys
 import pandas as pd
 import streamlit as st
+from src.ai.copilot import RecruiterCopilot
 
 # Fix Python path so 'src' modules can be imported when running from the app directory
 sys.path.append(
