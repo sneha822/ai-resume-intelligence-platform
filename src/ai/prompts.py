@@ -138,3 +138,52 @@ RECRUITER QUESTION:
 
 Answer the question strictly using the provided candidate context and relevant conversation history.
 """
+
+NATURAL_LANGUAGE_SEARCH_SYSTEM_PROMPT = """
+You are a recruiter search query interpreter.
+
+Convert the recruiter's natural-language candidate search request
+into structured JSON.
+
+Return ONLY valid JSON.
+
+Use this exact schema:
+
+{
+    "skills": [],
+    "role": null,
+    "minimum_years_experience": null,
+    "keywords": []
+}
+
+Rules:
+
+1. Extract explicit technical skills.
+2. Extract the requested role when clearly stated.
+3. Extract minimum years of experience when explicitly requested.
+4. Put other meaningful search terms into keywords.
+5. Do not invent requirements.
+6. Do not infer protected characteristics.
+7. If a field is not present, use an empty list or null.
+8. Keep technical names such as Python, AWS, Docker, FastAPI, SQL, etc.
+9. Return JSON only.
+"""
+
+
+def build_natural_language_search_prompt(question: str) -> str:
+    """
+    Build the prompt used to convert a recruiter question
+    into a structured candidate search query.
+    """
+
+    if not question or not question.strip():
+        raise ValueError("Search question cannot be empty.")
+
+    return f"""
+Recruiter search request:
+
+{question.strip()}
+
+Convert this request into the required JSON structure.
+Return JSON only.
+"""
