@@ -105,77 +105,82 @@ class CandidateKnowledgeBase:
 
         return results
 
-def get_candidate_evidence(
-    self,
-    candidate_id: str,
-    query: str
-):
-    candidate = self.get_candidate(candidate_id)
+def get_candidate_evidence(self, candidate_id: str, query: str):
+        """
+        Extract supporting evidence for a given candidate matching the search query tokens.
+        Handles both dataclass objects and raw dictionary structures.
+        """
+        candidate = self.get_candidate(candidate_id)
+        if candidate is None:
+            return []
 
-    if candidate is None:
-        return []
+        if not query or not query.strip():
+            return []
 
-    query_tokens = query.lower().split()
+        # Tokenize query into distinct lowercase terms
+        query_tokens = [token.lower().strip() for token in query.split() if token.strip()]
+        if not query_tokens:
+            return []
 
-    evidence = []
+        # Extract profile safely whether candidate is a CandidateRecord, dict, or object
+        if hasattr(candidate, "profile"):
+            profile = getattr(candidate, "profile")
+        elif isinstance(candidate, dict):
+            profile = candidate.get("profile", {})
+        else:
+            profile = {}
 
-    profile = candidate.profile
+        # Safely extract core sections
+        if hasattr(profile, "skills"):
+            skills = getattr(profile, "skills", []) or []
+            experiences = getattr(profile, "experience", []) or []
+            projects = getattr(profile, "projects", []) or []
+            certifications = getattr(profile, "certifications", []) or []
+        elif isinstance(profile, dict):
+            skills = profile.get("skills", []) or []
+            experiences = profile.get("experience", []) or []
+            projects = profile.get("projects", []) or []
+            certifications = profile.get("certifications", []) or []
+        else:
+            skills, experiences, projects, certifications = [], [], [], []
 
-    for skill in profile.get("skills", []):
+        evidence = []
 
-        skill_text = str(skill).lower()
+        # 1. Check Skills
+        for skill in skills:
+            skill_text = str(skill).lower()
+            if any(token in skill_text or skill_text in token for token in query_tokens):
+                evidence.append({"type": "skill", "content": str(skill)})
 
-        if any(
-            token in skill_text
-            for token in query_tokens
-        ):
-            evidence.append({
-                "type": "skill",
-                "content": skill
-            })
+        # 2. Check Certifications
+        for cert in certifications:
+            cert_text = str(cert).lower()
+            if any(token in cert_text for token in query_tokens):
+                evidence.append({"type": "certification", "content": str(cert)})
 
-    for experience in profile.get(
-        "experience",
-        []
-    ):
+        # 3. Check Experience
+        for exp in experiences:
+            if isinstance(exp, dict):
+                exp_text = " ".join(str(v) for v in exp.values() if v).lower()
+            else:
+                title = getattr(exp, "title", "") or getattr(exp, "role", "") or ""
+                company = getattr(exp, "company", "") or ""
+                description = getattr(exp, "description", "") or ""
+                exp_text = f"{title} {company} {description}".lower()
 
-        if not isinstance(experience, dict):
-            continue
+            if any(token in exp_text for token in query_tokens):
+                evidence.append({"type": "experience", "content": exp})
 
-        text = " ".join(
-            str(value)
-            for value in experience.values()
-        )
+        # 4. Check Projects
+        for proj in projects:
+            if isinstance(proj, dict):
+                proj_text = " ".join(str(v) for v in proj.values() if v).lower()
+            else:
+                name = getattr(proj, "name", "") or getattr(proj, "title", "") or ""
+                desc = getattr(proj, "description", "") or ""
+                proj_text = f"{name} {desc}".lower() if (name or desc) else str(proj).lower()
 
-        if any(
-            token in text.lower()
-            for token in query_tokens
-        ):
-            evidence.append({
-                "type": "experience",
-                "content": experience
-            })
+            if any(token in proj_text for token in query_tokens):
+                evidence.append({"type": "project", "content": proj})
 
-    for project in profile.get(
-        "projects",
-        []
-    ):
-
-        if not isinstance(project, dict):
-            continue
-
-        text = " ".join(
-            str(value)
-            for value in project.values()
-        )
-
-        if any(
-            token in text.lower()
-            for token in query_tokens
-        ):
-            evidence.append({
-                "type": "project",
-                "content": project
-            })
-
-    return evidence
+        return evidence

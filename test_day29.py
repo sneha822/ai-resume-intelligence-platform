@@ -1,37 +1,22 @@
+import os
 import pandas as pd
-
 from src.model_comparison import ModelComparator
 
 
-df = pd.read_csv(
-    "data/processed_candidates.csv"
-)
+def test_day29_model_comparison():
+    df = pd.DataFrame({
+        "skill_count": [2, 5, 8, 3, 6, 1, 2, 5, 8, 3, 6, 1],
+        "experience_years": [1, 4, 7, 2, 5, 0, 1, 4, 7, 2, 5, 0],
+        "project_count": [1, 3, 6, 2, 4, 0, 1, 3, 6, 2, 4, 0],
+        "certification_count": [0, 2, 4, 1, 3, 0, 0, 2, 4, 1, 3, 0],
+        "candidate_level": [
+            "Beginner", "Intermediate", "Advanced",
+            "Beginner", "Advanced", "Intermediate",
+            "Beginner", "Intermediate", "Advanced",
+            "Beginner", "Advanced", "Intermediate"
+        ]
+    })
 
-comparator = ModelComparator()
-
-results = comparator.compare_models(
-    df
-)
-
-results_df = pd.DataFrame(
-    list(results.items()),
-    columns=["model", "accuracy"]
-)
-
-results_df.to_csv(
-    "data/model_comparison.csv",
-    index=False
-)
-
-print("\n=== MODEL COMPARISON ===")
-print(results_df)
-
-best_model = max(
-    results,
-    key=results.get
-)
-
-print("\n=== BEST MODEL ===")
-print(
-    f"{best_model} -> {results[best_model]:.2f}"
-)
+    comparator = ModelComparator()
+    results = comparator.compare_models(df)
+    assert results is not None

@@ -12,7 +12,16 @@ class RecruiterCopilot:
 
     def __init__(self, llm_client=None):
         self.llm_client = llm_client or LLMClient()
-        self.history = []
+        self.conversation_history = []
+
+    @property
+    def history(self):
+        """Property alias for backward compatibility with self.history."""
+        return self.conversation_history
+
+    @history.setter
+    def history(self, value):
+        self.conversation_history = value
 
     def build_context(self, candidates):
         """
@@ -40,14 +49,16 @@ PROFILE:
         """
         Format previous conversation turns into a string for prompt context.
         """
-        if not self.history:
+        if not self.conversation_history:
             return "No prior conversation history."
 
         turns = []
-        for turn in self.history:
-            turns.append(f"Recruiter: {turn['question']}\nCopilot: {turn['answer']}")
+        for turn in self.conversation_history:
+            role = turn.get("role", "user")
+            content = turn.get("content", turn.get("question", turn.get("answer", "")))
+            turns.append(f"{role.capitalize()}: {content}")
 
-        return "\n\n".join(turns)
+        return "\n".join(turns)
 
     def build_prompt(self, question, candidates):
         context = self.build_context(candidates)
@@ -81,11 +92,9 @@ Consider the conversation history if the question is a follow-up.
             system_prompt=COPILOT_SYSTEM_PROMPT
         )
 
-        # Store turn in history for future follow-ups
-        self.history.append({
-            "question": question,
-            "answer": response
-        })
+        # Append separate history entries for user query and AI response
+        self.conversation_history.append({"role": "user", "content": question})
+        self.conversation_history.append({"role": "assistant", "content": response})
 
         return response
 
@@ -93,4 +102,4 @@ Consider the conversation history if the question is a follow-up.
         """
         Reset conversation memory.
         """
-        self.history = []
+        self.conversation_history = []

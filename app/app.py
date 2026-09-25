@@ -1,10 +1,7 @@
 import os
 import sys
-import pandas as pd
-import streamlit as st
-from src.ai.copilot import RecruiterCopilot
 
-# Fix Python path so 'src' modules can be imported when running from the app directory
+# MUST come before importing any 'src' modules
 sys.path.append(
     os.path.abspath(
         os.path.join(
@@ -14,6 +11,10 @@ sys.path.append(
     )
 )
 
+import pandas as pd
+import streamlit as st
+from src.ai.copilot import RecruiterCopilot
+from src.ai.v2_pipeline import V2RecruitingPipeline
 from src.file_handler import FileHandler
 from src.parser import ResumeParser
 from src.interview_question_generator import InterviewQuestionGenerator
@@ -44,6 +45,15 @@ if "latest_parsed_data" not in st.session_state:
 
 if "leaderboard" not in st.session_state:
     st.session_state["leaderboard"] = pd.DataFrame()
+
+if "v2_pipeline" not in st.session_state:
+    st.session_state["v2_pipeline"] = V2RecruitingPipeline()
+
+if "copilot" not in st.session_state:
+    st.session_state["copilot"] = RecruiterCopilot()
+
+v2_pipeline = st.session_state["v2_pipeline"]
+copilot = st.session_state["copilot"]
 
 
 # ==========================================================
@@ -161,6 +171,8 @@ with st.sidebar:
     st.write("✓ Similarity Scoring")
     st.write("✓ Candidate Ranking Leaderboard")
     st.write("✓ Batch Evaluator Engine")
+    st.write("✓ Recruiter Copilot (LLM Search & QA)")
+    st.write("✓ Evidence-Based Interview Question Generator")
     
     st.markdown("---")
     st.caption("AI Resume Intelligence Platform • 2026")
@@ -354,6 +366,105 @@ with tab1:
                 for _, failed_row in failed_candidates.iterrows():
                     st.error(f"**{failed_row['candidate']}**: {failed_row.get('error', 'Processing exception')}")
 
+        # ==========================================================
+        # PART 7: Recruiter Copilot & Natural Language Search UI
+        # ==========================================================
+        st.markdown("---")
+        st.subheader("🤖 Recruiter Copilot & Natural Language Search")
+        st.write(
+            "Search candidates using natural language "
+            "and ask grounded questions about candidate evidence."
+        )
+
+        search_question = st.text_input(
+            "Candidate search / question",
+            placeholder="e.g. Find Python and AWS backend developers with at least 3 years of experience"
+        )
+
+        if st.button(" Ask Copilot", type="primary"):
+            if not search_question.strip():
+                st.warning("Please enter a question or search query.")
+            else:
+                with st.spinner("Copilot is analyzing candidate context..."):
+                    # Convert leaderboard records into candidate list dictionary context
+                    candidate_records = []
+                    for idx, row in successful_candidates.iterrows():
+                        candidate_records.append({
+                            "candidate_id": row.get("candidate", f"Candidate_{idx}"),
+                            "profile": row.to_dict()
+                        })
+
+                    try:
+                        copilot_response = copilot.ask(search_question, candidate_records)
+                        st.markdown("#### 💡 Copilot Response")
+                        st.info(copilot_response)
+                    except Exception as err:
+                        st.error(f"Copilot failed to generate a response: {str(err)}")
+
+        if copilot.conversation_history:
+            with st.expander("📜 View Conversation History"):
+                for turn in copilot.conversation_history:
+                    role = turn.get("role", "user").capitalize()
+                    content = turn.get("content", turn.get("question", turn.get("answer", "")))
+                    if role == "User":
+                        st.markdown(f"**🗣️ {role}:** {content}")
+                    else:
+                        st.markdown(f"**🤖 {role}:** {content}")
+                if st.button("Clear History"):
+                    copilot.clear_history()
+                    st.experimental_rerun()
+
+        # ==========================================================
+        # PART 8: Candidate Evidence & Interview Question Generator
+        # ==========================================================
+        st.markdown("---")
+        st.subheader("🎯 Evidence-Based Interview Question Generator")
+        st.write("Generate targeted interview questions grounded in candidate profile evidence and missing skills.")
+
+        selected_interview_candidate = st.selectbox(
+            "Select Candidate for Interview Prep:",
+            successful_candidates["candidate"].tolist(),
+            key="interview_candidate_select"
+        )
+
+        if st.button("⚡ Generate Interview Questions", type="secondary"):
+            candidate_row = successful_candidates[
+                successful_candidates["candidate"] == selected_interview_candidate
+            ].iloc[0]
+
+            with st.spinner("Generating tailored technical and behavioral interview questions..."):
+                try:
+                    # Parse missing and matched skills lists
+                    missing_skills_list = [
+                        s.strip() for s in str(candidate_row.get("missing_skills", "")).split(",") if s.strip()
+                    ]
+                    matched_skills_list = [
+                        s.strip() for s in str(candidate_row.get("matched_skills", "")).split(",") if s.strip()
+                    ]
+
+                    # Call question generator subsystem
+                    questions = question_generator.generate_questions(
+                        matched_skills=matched_skills_list,
+                        missing_skills=missing_skills_list,
+                        role=selected_interview_candidate
+                    )
+
+                    st.markdown(f"### 📋 Interview Guide for **{selected_interview_candidate}**")
+
+                    if isinstance(questions, dict):
+                        for category, q_list in questions.items():
+                            st.markdown(f"#### 📌 {category.replace('_', ' ').title()}")
+                            for q in q_list:
+                                st.write(f"- {q}")
+                    elif isinstance(questions, list):
+                        for q in questions:
+                            st.write(f"- {q}")
+                    else:
+                        st.write(questions)
+
+                except Exception as err:
+                    st.error(f"Failed to generate interview questions: {str(err)}")
+
 
 # ==========================================================
 # TAB 2: System Architecture & Workflow
@@ -389,6 +500,12 @@ Candidate Resumes (PDF/TXT)            Job Description (TXT)
                             ▼
                  Ranked Candidate Leaderboard
                             │
+             ┌──────────────┴──────────────┐
+             ▼                             ▼
+   Recruiter AI Copilot        Interview Question Generator
+             │                             │
+             └──────────────┬──────────────┘
+                            │
                             ▼
                  Streamlit Intelligence UI
     """, language="text")
@@ -401,6 +518,8 @@ Candidate Resumes (PDF/TXT)            Job Description (TXT)
     * **JD Parser (`job_description.py`):** Isolates target domain competencies and key requirements from candidate specs.
     * **Matcher & Scorer (`job_matcher.py` & `match_scorer.py`):** Calculates direct keyword intersection, precision, missing vectors, and similarity metrics.
     * **Batch Evaluator (`batch_evaluator.py`):** Coordinates multi-candidate evaluations with structured error handling so invalid files don't halt scoring.
+    * **Recruiter Copilot (`copilot.py`):** Powers natural language candidate search and contextual QA over active profile data.
+    * **Question Generator (`interview_question_generator.py`):** Synthesizes grounded technical and behavioral interview questions from candidate gap analysis.
     """)
     st.markdown('</div>', unsafe_allow_html=True)
 
@@ -419,6 +538,8 @@ with tab3:
     2. **Execute Analysis:** Click **Run Candidate Intelligence Pipeline** to start batch parsing, skill extraction, and scoring.
     3. **Review Metrics:** View total evaluations, success rates, average match ratios, and top candidate standings.
     4. **Inspect Gaps:** Use the **Recruiter Candidate Inspector** to review specific skill matches and missing requirements per candidate.
+    5. **Query Copilot (Part 7):** Ask questions about candidates using natural language to extract evidence-backed summaries.
+    6. **Generate Interview Guides (Part 8):** Select a candidate to auto-generate targeted technical and behavioral interview questions based on missing skill vectors.
     """)
     st.markdown('</div>', unsafe_allow_html=True)
 
