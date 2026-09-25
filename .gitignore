@@ -24,3 +24,27 @@ logs/
 
 .env
 .streamlit/secrets.toml
+
+.venv/
+venv/
+env/
+
+__pycache__/
+*.pyc
+
+.env
+.env.*
+
+!.env.example
+
+.pytest_cache/
+
+data/temp_uploads/*
+data/raw/*
+models/*
+logs/*
+
+*.db
+
+.DS_Store
+Thumbs.db

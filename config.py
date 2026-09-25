@@ -1,4 +1,6 @@
 import os
+PROJECT_NAME = "AI Resume Intelligence & Interview Copilot"
+PROJECT_VERSION = "2.0.0"
 
 USE_AI_PARSER = os.getenv("USE_AI_PARSER", "true").lower() == "true"
 

@@ -47,3 +47,37 @@
 ## Day 41
 
 - Added job description parsing
+
+# Changelog
+
+## [2.0.0] - 2026-09-25
+
+### Added
+
+- LLM provider abstraction
+- Structured AI resume extraction
+- CandidateProfile schema
+- Hybrid AI + rule-based parsing
+- Semantic candidate evaluation
+- Evidence-backed evaluation
+- Candidate knowledge layer
+- Natural-language candidate search
+- Recruiter Copilot
+- Unified V2 recruiting pipeline
+- V2 Streamlit interface
+- Expanded V2 test coverage
+
+### Improved
+
+- Resume intelligence architecture
+- Candidate search capabilities
+- Explainability of candidate evaluation
+- Recruiter interaction workflow
+
+### Preserved
+
+- Original V1 parsing pipeline
+- Job description matching
+- Candidate ranking
+- Batch evaluation
+- Existing deterministic fallback behaviour

@@ -1,6 +1,7 @@
 import os
 import sys
 
+
 # MUST come before importing any 'src' modules
 sys.path.append(
     os.path.abspath(
@@ -10,6 +11,9 @@ sys.path.append(
         )
     )
 )
+
+# Import configuration constants here
+from config import PROJECT_NAME, PROJECT_VERSION
 
 import pandas as pd
 import streamlit as st
