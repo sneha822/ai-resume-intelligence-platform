@@ -12,12 +12,14 @@ from fastapi import FastAPI
 from backend.api.errors import register_exception_handlers
 from backend.api.v1.router import api_router
 from backend.core.config import settings
+from backend.observability.telemetry import setup_telemetry
 
 
 def create_app() -> FastAPI:
     app = FastAPI(title=settings.app_name, debug=settings.debug)
 
     register_exception_handlers(app)
+    setup_telemetry(app)  # no-op unless otel_enabled
     app.include_router(api_router)
 
     @app.get("/health", tags=["system"])

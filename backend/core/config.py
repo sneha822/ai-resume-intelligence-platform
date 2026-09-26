@@ -39,6 +39,13 @@ class Settings(BaseSettings):
     embedding_model: str = Field(default="BAAI/bge-base-en-v1.5")
     embedding_dim: int = Field(default=768)
 
+    # --- Observability (OpenTelemetry) ---
+    otel_enabled: bool = Field(default=False)
+    otel_service_name: str = Field(default="airi-backend")
+    # e.g. http://localhost:4318 (Phoenix / OTLP collector). Empty = no OTLP export.
+    otel_exporter_otlp_endpoint: str = Field(default="")
+    otel_console_export: bool = Field(default=False)
+
 
 @lru_cache
 def get_settings() -> Settings:
