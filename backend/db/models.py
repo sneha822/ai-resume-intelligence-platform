@@ -60,7 +60,7 @@ class Job(TimestampMixin, Base):
     )
 
     created_by: Mapped[User | None] = relationship(back_populates="jobs")
-    evaluations: Mapped[list[Evaluation]] = relationship(back_populates="job")
+    evaluations: Mapped[list[Evaluation]] = relationship(back_populates="job", passive_deletes=True)
 
 
 class Candidate(TimestampMixin, Base):
@@ -73,9 +73,11 @@ class Candidate(TimestampMixin, Base):
     profile: Mapped[dict[str, Any]] = mapped_column(JSONB, default=dict)
 
     resumes: Mapped[list[Resume]] = relationship(
-        back_populates="candidate", cascade="all, delete-orphan"
+        back_populates="candidate", cascade="all, delete-orphan", passive_deletes=True
     )
-    evaluations: Mapped[list[Evaluation]] = relationship(back_populates="candidate")
+    evaluations: Mapped[list[Evaluation]] = relationship(
+        back_populates="candidate", passive_deletes=True
+    )
 
 
 class Resume(TimestampMixin, Base):

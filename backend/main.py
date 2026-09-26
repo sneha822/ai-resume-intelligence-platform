@@ -9,11 +9,16 @@ from __future__ import annotations
 
 from fastapi import FastAPI
 
+from backend.api.errors import register_exception_handlers
+from backend.api.v1.router import api_router
 from backend.core.config import settings
 
 
 def create_app() -> FastAPI:
     app = FastAPI(title=settings.app_name, debug=settings.debug)
+
+    register_exception_handlers(app)
+    app.include_router(api_router)
 
     @app.get("/health", tags=["system"])
     async def health() -> dict[str, str]:
@@ -21,7 +26,7 @@ def create_app() -> FastAPI:
 
     @app.get("/ready", tags=["system"])
     async def ready() -> dict[str, str]:
-        # Phase 1+ will check DB/Redis connectivity here.
+        # A later phase will check DB/Redis connectivity here.
         return {"status": "ready"}
 
     return app
