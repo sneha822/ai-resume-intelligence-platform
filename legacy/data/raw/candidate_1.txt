@@ -1,0 +1,9 @@
+Aryan Mehta
+
+Email: aryan@gmail.com
+Phone: 9876543211
+
+Skills:
+Python
+Java
+SQL

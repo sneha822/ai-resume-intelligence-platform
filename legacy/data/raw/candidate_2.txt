@@ -1,0 +1,9 @@
+Kavya Sharma
+
+Email: kavya@gmail.com
+Phone: 9876543212
+
+Skills:
+Machine Learning
+Python
+SQL

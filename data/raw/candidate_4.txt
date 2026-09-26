@@ -1,8 +1,0 @@
-Neha Singh
-
-Email: neha@gmail.com
-Phone: 9876543214
-
-Skills:
-Python
-Machine Learning

@@ -1,4 +1,0 @@
-Total Candidates: 5
-Unique Emails: 5
-Top Skill: Python
-Missing Values: 0

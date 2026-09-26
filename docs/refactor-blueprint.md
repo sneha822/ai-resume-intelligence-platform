@@ -99,7 +99,7 @@ ai-resume-intelligence-platform/
 │   ├── unit/  integration/  evals/  # evals/ = Ragas/DeepEval retrieval+scoring drift
 │   └── conftest.py                 # fixtures: test db, fake LLM, testcontainers
 │
-├── archive/                        # legacy test_day*.py kept for history, excluded from CI
+├── legacy/                         # entire V1 codebase (src/, app/, data/, ...) kept as reference, excluded from CI
 └── .github/workflows/ci.yml
 ```
 
@@ -118,7 +118,7 @@ ai-resume-intelligence-platform/
 | `src/ai/hybrid_parser.py` | `backend/adapters/parsing/*` | Wrap Docling/Unstructured |
 | `src/database.py` (sqlite3) | `backend/db/*` | SQLAlchemy 2.0 + Alembic + Postgres/pgvector |
 | `src/scoring.py`, `match_scorer.py`, TF-IDF | `retrieval_service` (BM25 leg) | Keep as sparse signal, drop as final scorer |
-| `test_day*.py` | `archive/` | Replaced by `tests/` |
+| `test_day*.py` + all V1 code (`src/`, `app/`, `data/`) | `legacy/` | Replaced by `tests/` + `backend/`; pristine snapshot on `v1-legacy-baseline` branch |
 
 ---
 
