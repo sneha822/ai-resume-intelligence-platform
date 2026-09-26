@@ -12,6 +12,7 @@ from __future__ import annotations
 from collections.abc import AsyncIterator
 
 import pytest
+from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
@@ -26,7 +27,7 @@ from backend.main import create_app
 
 
 @pytest.fixture
-async def client() -> AsyncIterator[AsyncClient]:
+async def app() -> AsyncIterator[FastAPI]:
     engine = create_async_engine(
         "sqlite+aiosqlite://",
         connect_args={"check_same_thread": False},
@@ -43,11 +44,16 @@ async def client() -> AsyncIterator[AsyncClient]:
         async with factory() as session:
             yield session
 
-    app = create_app()
-    app.dependency_overrides[get_session] = _override_get_session
+    application = create_app()
+    application.dependency_overrides[get_session] = _override_get_session
 
+    yield application
+
+    await engine.dispose()
+
+
+@pytest.fixture
+async def client(app: FastAPI) -> AsyncIterator[AsyncClient]:
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         yield ac
-
-    await engine.dispose()

@@ -35,8 +35,9 @@ class Settings(BaseSettings):
     ollama_model: str = Field(default="llama3.2")
 
     # --- Embeddings / retrieval ---
-    embedding_model: str = Field(default="bge-large-en-v1.5")
-    embedding_dim: int = Field(default=1024)
+    # CPU-friendly ONNX embeddings via fastembed (no torch). 768-dim.
+    embedding_model: str = Field(default="BAAI/bge-base-en-v1.5")
+    embedding_dim: int = Field(default=768)
 
 
 @lru_cache

@@ -1,50 +1,37 @@
-# Local Virtual Environment (no need to upload to GitHub)
-myenv/
-
-# Python Cache Files
-__pycache__/
-*.pyc
-src/__pycache__/
-
-# Log Files
-logs/*.log
-
-# Editor and System Files
-.vscode/
-.DS_Store
-Thumbs.db
-
-# ==========================================================
-# Day 16: Security Protection (Never upload user resumes)
-# ==========================================================
-data/temp_uploads/*
-data/uploads/*
-*.log
-logs/
-
-.env
-.streamlit/secrets.toml
-
-.venv/
-venv/
-env/
-
-__pycache__/
-*.pyc
-
-.env
-.env.*
 
 !.env.example
-
-.pytest_cache/
-
-data/temp_uploads/*
-data/raw/*
-models/*
-logs/*
-
+# ==========================================================
+# Day 16: Security Protection (Never upload user resumes)
+# Editor and System Files
+# Local Virtual Environment (no need to upload to GitHub)
+# Log Files
+# Python Cache Files
 *.db
-
+*.egg-info/
+*.log
+*.pyc
 .DS_Store
+.env
+.env.*
+.mypy_cache/
+.pytest_cache/
+.pytest_cache/
+.ruff_cache/
+.streamlit/secrets.toml
+.venv/
+.vscode/
+Thumbs.db
 Thumbs.db.verifyenv/
+__pycache__/
+__pycache__/
+data/raw/*
+data/temp_uploads/*
+data/uploads/*
+env/
+logs/
+logs/*
+logs/*.log
+models/*
+myenv/
+src/__pycache__/
+venv/
