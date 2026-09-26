@@ -19,6 +19,7 @@ celery_app = Celery(
     "airi",
     broker=settings.celery_broker_url,
     backend=settings.celery_result_backend,
+    include=["backend.workers.tasks"],
 )
 
 celery_app.conf.update(
