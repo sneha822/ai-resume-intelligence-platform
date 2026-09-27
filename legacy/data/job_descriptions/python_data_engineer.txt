@@ -1,0 +1,10 @@
+We are looking for a Data Engineer with strong experience
+in Python and SQL.
+
+The candidate should understand machine learning and data
+analysis.
+
+Experience with Pandas, NumPy, Docker, AWS and Git is preferred.
+
+The candidate should be comfortable working with APIs and
+building production-ready data systems.

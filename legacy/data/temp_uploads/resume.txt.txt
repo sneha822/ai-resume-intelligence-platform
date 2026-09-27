@@ -1,0 +1,11 @@
+John Doe
+Email: johndoe@gmail.com
+Phone: 9876543210
+
+Professional Skills:
+- Python
+- SQL
+- Machine Learning
+
+Experience:
+Worked as a Data Analyst handling database queries and building predictive models.

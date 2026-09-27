@@ -1,3 +1,0 @@
-johndoe@gmail.com
-9876543210
-python, sql, machine learning
