@@ -24,9 +24,11 @@ class IngestionService:
     async def ingest(self, filename: str, content: bytes) -> str:
         parsed = await self._parser.parse(filename, content)
         email, phone = self._extract_contact(parsed.text)
+        name = parsed.metadata.get("name")
 
         candidate = await CandidateRepository(self._session).upsert_by_email(
             email=email,
+            name=name,
             phone=phone,
             profile={"sections": parsed.sections},
         )
