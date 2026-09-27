@@ -16,6 +16,7 @@ from backend.core.schemas.evaluation import (
     GapAnalysis,
     RubricScore,
 )
+from backend.core.schemas.extraction import ResumeExtraction
 from backend.core.schemas.job import JobCreate, JobRead, JobUpdate
 from backend.core.schemas.search import SearchQuery, SearchResult
 
@@ -34,6 +35,7 @@ __all__ = [
     "JobCreate",
     "JobRead",
     "JobUpdate",
+    "ResumeExtraction",
     "ResumeRead",
     "RubricScore",
     "SearchQuery",

@@ -17,10 +17,16 @@ async def _ingest(filename: str, content: bytes) -> str:
     from backend.adapters.embeddings.factory import get_embedder
     from backend.adapters.parsing.pymupdf_parser import PyMuPDFParser
     from backend.db.base import async_session_factory
+    from backend.services.extraction_service import build_default_extractor
     from backend.services.ingestion_service import IngestionService
 
     async with async_session_factory() as session:
-        service = IngestionService(session, PyMuPDFParser(), get_embedder())
+        service = IngestionService(
+            session,
+            PyMuPDFParser(),
+            get_embedder(),
+            extractor=build_default_extractor(),
+        )
         return await service.ingest(filename, content)
 
 
