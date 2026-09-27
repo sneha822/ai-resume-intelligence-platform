@@ -3,8 +3,10 @@
 install:
 	pip install -e ".[dev]"
 
+# Windows-safe launcher (sets SelectorEventLoop for async psycopg).
+# On Linux/Docker `uvicorn backend.main:app` also works.
 dev:
-	uvicorn backend.main:app --reload
+	python -m backend
 
 lint:
 	ruff check backend tests
