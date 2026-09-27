@@ -10,9 +10,16 @@ from __future__ import annotations
 from fastapi import APIRouter, HTTPException, status
 
 from backend.api.deps import EvaluationServiceDep, SessionDep
-from backend.core.schemas import EvaluationRead, EvaluationRequest
+from backend.core.schemas import (
+    BatchEvaluationItem,
+    BatchEvaluationRequest,
+    BatchEvaluationResponse,
+    EvaluationRead,
+    EvaluationRequest,
+)
 from backend.db.models import Evaluation
 from backend.db.repositories import CandidateRepository, JobRepository
+from backend.services.batch_evaluation_service import BatchEvaluationService
 
 router = APIRouter(prefix="/evaluations", tags=["evaluations"])
 
@@ -48,3 +55,32 @@ async def create_evaluation(
     await session.commit()
     await session.refresh(evaluation)
     return evaluation
+
+
+@router.post(
+    "/batch",
+    response_model=BatchEvaluationResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+async def create_batch_evaluations(
+    payload: BatchEvaluationRequest, session: SessionDep, service: EvaluationServiceDep
+) -> BatchEvaluationResponse:
+    job = await JobRepository(session).get(payload.job_id)
+    if job is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Job not found")
+
+    batch = BatchEvaluationService(session, service)
+    pairs = await batch.evaluate_job(job, payload.candidate_ids or None)
+
+    return BatchEvaluationResponse(
+        job_id=job.id,
+        evaluated=len(pairs),
+        results=[
+            BatchEvaluationItem(
+                candidate_id=candidate.id,
+                overall_score=result.overall_score,
+                fit_level=result.fit_level.value,
+            )
+            for candidate, result in pairs
+        ],
+    )

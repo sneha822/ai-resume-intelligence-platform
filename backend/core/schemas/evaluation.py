@@ -46,3 +46,21 @@ class EvaluationResult(BaseModel):
 class EvaluationRequest(BaseModel):
     candidate_id: uuid.UUID
     job_id: uuid.UUID
+
+
+class BatchEvaluationRequest(BaseModel):
+    job_id: uuid.UUID
+    # Empty -> evaluate every candidate in the pool.
+    candidate_ids: list[uuid.UUID] = Field(default_factory=list)
+
+
+class BatchEvaluationItem(BaseModel):
+    candidate_id: uuid.UUID
+    overall_score: float
+    fit_level: str
+
+
+class BatchEvaluationResponse(BaseModel):
+    job_id: uuid.UUID
+    evaluated: int
+    results: list[BatchEvaluationItem] = Field(default_factory=list)

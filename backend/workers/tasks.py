@@ -44,8 +44,8 @@ async def _batch_evaluate(candidate_ids: list[str], job_id: str) -> list[str]:
     from backend.core.resiliency.circuit_breaker import CircuitBreaker
     from backend.core.resiliency.rate_limiter import TokenBucketRateLimiter
     from backend.db.base import async_session_factory
-    from backend.db.models import Evaluation
-    from backend.db.repositories import CandidateRepository, JobRepository
+    from backend.db.repositories import JobRepository
+    from backend.services.batch_evaluation_service import BatchEvaluationService
     from backend.services.evaluation_service import EvaluationService
 
     llm = ResilientLLMProvider(
@@ -53,33 +53,15 @@ async def _batch_evaluate(candidate_ids: list[str], job_id: str) -> list[str]:
         rate_limiter=TokenBucketRateLimiter(rate=2.0, capacity=5.0),
         breaker=CircuitBreaker(failure_threshold=5, reset_timeout=30.0),
     )
-    service = EvaluationService(llm)
-    written: list[str] = []
 
     async with async_session_factory() as session:
         job = await JobRepository(session).get(uuid.UUID(job_id))
         if job is None:
-            return written
-        candidate_repo = CandidateRepository(session)
-        for cid in candidate_ids:
-            candidate = await candidate_repo.get(uuid.UUID(cid))
-            if candidate is None:
-                continue
-            result = await service.evaluate(
-                candidate={"name": candidate.name, "profile": candidate.profile},
-                job={"title": job.title, "description": job.description},
-            )
-            evaluation = Evaluation(
-                candidate_id=candidate.id,
-                job_id=job.id,
-                overall_score=result.overall_score,
-                fit_level=result.fit_level.value,
-                result=result.model_dump(mode="json"),
-            )
-            session.add(evaluation)
-            written.append(str(candidate.id))
-        await session.commit()
-    return written
+            return []
+        batch = BatchEvaluationService(session, EvaluationService(llm))
+        ids = [uuid.UUID(cid) for cid in candidate_ids] or None
+        pairs = await batch.evaluate_job(job, ids)
+        return [str(candidate.id) for candidate, _ in pairs]
 
 
 @celery_app.task(name="batch_evaluate")  # type: ignore[untyped-decorator]

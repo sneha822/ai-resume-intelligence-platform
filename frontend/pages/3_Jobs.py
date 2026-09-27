@@ -41,3 +41,10 @@ for j in jobs:
         f'<span class="airi-muted">{j["description"][:200]}</span></div>',
         unsafe_allow_html=True,
     )
+    if st.button("Evaluate all candidates", key=f"batch-{j['id']}"):
+        with st.spinner("Running bulk evaluation..."):
+            try:
+                res = client.evaluate_batch(j["id"])
+                st.success(f"Evaluated {res['evaluated']} candidate(s).")
+            except APIError as exc:
+                st.error(f"Batch evaluation failed: {exc.detail}")

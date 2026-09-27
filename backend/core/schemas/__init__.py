@@ -10,6 +10,9 @@ from backend.core.schemas.candidate import (
 )
 from backend.core.schemas.copilot import CopilotRequest, CopilotResponse
 from backend.core.schemas.evaluation import (
+    BatchEvaluationItem,
+    BatchEvaluationRequest,
+    BatchEvaluationResponse,
     EvaluationRequest,
     EvaluationResult,
     FitLevel,
@@ -21,6 +24,9 @@ from backend.core.schemas.job import JobCreate, JobRead, JobUpdate
 from backend.core.schemas.search import SearchQuery, SearchResult
 
 __all__ = [
+    "BatchEvaluationItem",
+    "BatchEvaluationRequest",
+    "BatchEvaluationResponse",
     "CandidateCreate",
     "CandidateDetail",
     "CandidateRead",
