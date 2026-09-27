@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import time
+from collections.abc import AsyncIterator
 from typing import TypeVar
 
 import instructor
@@ -79,3 +80,17 @@ class AnthropicProvider:
             result: T = raw
             self._record(span, getattr(completion, "usage", None), started)
             return result
+
+    async def stream(self, prompt: str, system: str | None = None) -> AsyncIterator[str]:
+        with _TRACER.start_as_current_span("llm.stream") as span:
+            started = time.perf_counter()
+            async with self._raw.messages.stream(
+                model=self._model,
+                max_tokens=self._max_tokens,
+                system=system or "",
+                messages=[{"role": "user", "content": prompt}],
+            ) as stream:
+                async for text in stream.text_stream:
+                    yield text
+                final = await stream.get_final_message()
+            self._record(span, final.usage, started)

@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import contextlib
 import os
+from collections.abc import Iterator
 from typing import Any
 
 import httpx
@@ -85,3 +86,29 @@ class APIClient:
             f"{self._api}/copilot",
             json={"question": question, "candidate_ids": candidate_ids},
         )
+
+    def copilot_stream(self, question: str, candidate_ids: list[str]) -> Iterator[str]:
+        """Yield answer chunks from the SSE endpoint (for st.write_stream)."""
+        import json
+
+        body = {"question": question, "candidate_ids": candidate_ids}
+        try:
+            with httpx.stream(
+                "POST", f"{self._api}/copilot/stream", json=body, timeout=self._timeout
+            ) as resp:
+                if resp.status_code >= 400:
+                    resp.read()
+                    detail = resp.text
+                    with contextlib.suppress(Exception):
+                        detail = resp.json().get("detail", detail)
+                    raise APIError(resp.status_code, str(detail))
+                for line in resp.iter_lines():
+                    if not line.startswith("data: "):
+                        continue
+                    payload = line[len("data: ") :]
+                    if payload == "[DONE]":
+                        break
+                    with contextlib.suppress(Exception):
+                        yield json.loads(payload).get("delta", "")
+        except httpx.RequestError as exc:
+            raise APIError(0, f"Cannot reach API at {self._base}: {exc}") from exc

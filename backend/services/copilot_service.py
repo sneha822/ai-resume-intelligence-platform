@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import AsyncIterator
 from typing import Any
 
 from backend.core.ports.llm import LLMProvider
@@ -18,9 +19,19 @@ class CopilotService:
         self._llm = llm
 
     async def answer(self, question: str, candidates: list[dict[str, Any]]) -> str:
+        return await self._llm.generate(self._prompt(question, candidates), system=SYSTEM_PROMPT)
+
+    async def answer_stream(
+        self, question: str, candidates: list[dict[str, Any]]
+    ) -> AsyncIterator[str]:
+        async for chunk in self._llm.stream(
+            self._prompt(question, candidates), system=SYSTEM_PROMPT
+        ):
+            yield chunk
+
+    def _prompt(self, question: str, candidates: list[dict[str, Any]]) -> str:
         context = self._build_context(candidates)
-        prompt = f"CANDIDATE CONTEXT:\n{context}\n\nQUESTION: {question}"
-        return await self._llm.generate(prompt, system=SYSTEM_PROMPT)
+        return f"CANDIDATE CONTEXT:\n{context}\n\nQUESTION: {question}"
 
     @staticmethod
     def _build_context(candidates: list[dict[str, Any]]) -> str:
