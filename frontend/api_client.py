@@ -79,6 +79,13 @@ class APIClient:
             json={"candidate_id": candidate_id, "job_id": job_id},
         )
 
+    def evaluate_batch(self, job_id: str, candidate_ids: list[str] | None = None) -> dict[str, Any]:
+        return self._request(
+            "POST",
+            f"{self._api}/evaluations/batch",
+            json={"job_id": job_id, "candidate_ids": candidate_ids or []},
+        )
+
     # --- copilot ---
     def copilot(self, question: str, candidate_ids: list[str]) -> dict[str, Any]:
         return self._request(
