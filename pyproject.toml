@@ -39,6 +39,10 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+frontend = [
+    "streamlit>=1.39.0",
+    "plotly>=5.24.0",
+]
 dev = [
     "ruff>=0.7.0",
     "black>=24.10.0",

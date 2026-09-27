@@ -25,3 +25,34 @@ class CandidateRead(BaseModel):
     phone: str | None
     profile: dict[str, Any]
     created_at: datetime
+
+
+class CandidateSummary(BaseModel):
+    id: uuid.UUID
+    name: str | None
+    email: str | None
+    resume_count: int
+
+
+class ResumeRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    filename: str
+    created_at: datetime
+
+
+class EvaluationRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    job_id: uuid.UUID
+    overall_score: float
+    fit_level: str
+    result: dict[str, Any]
+    created_at: datetime
+
+
+class CandidateDetail(CandidateRead):
+    resumes: list[ResumeRead] = Field(default_factory=list)
+    evaluations: list[EvaluationRead] = Field(default_factory=list)

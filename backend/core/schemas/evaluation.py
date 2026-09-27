@@ -7,6 +7,7 @@ via Instructor in the Anthropic adapter), replacing the old dataclass +
 
 from __future__ import annotations
 
+import uuid
 from enum import Enum
 
 from pydantic import BaseModel, Field
@@ -40,3 +41,8 @@ class EvaluationResult(BaseModel):
     strengths: list[str] = Field(default_factory=list)
     gaps: GapAnalysis
     summary: str
+
+
+class EvaluationRequest(BaseModel):
+    candidate_id: uuid.UUID
+    job_id: uuid.UUID
