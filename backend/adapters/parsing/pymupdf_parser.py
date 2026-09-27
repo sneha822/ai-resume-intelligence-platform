@@ -30,6 +30,19 @@ _HEADER_RE = re.compile(
     re.IGNORECASE | re.MULTILINE,
 )
 
+# Words that appear at the top of a resume but are not the person's name.
+_NON_NAME_WORDS = set(_SECTION_HEADERS) | {
+    "curriculum vitae",
+    "resume",
+    "cv",
+    "profile",
+    "contact",
+    "contact information",
+}
+# A name token: alphabetic, allowing an internal apostrophe/hyphen or a trailing
+# dot for a middle initial (e.g. "O'Brien", "Jean-Luc", "Q.").
+_NAME_TOKEN_RE = re.compile(r"^[A-Za-z][A-Za-z'-]*\.?$")
+
 
 class PyMuPDFParser:
     """Implements the ``DocumentParser`` port."""
@@ -44,11 +57,37 @@ class PyMuPDFParser:
             for page in doc:
                 text_parts.append(page.get_text())
         text = "\n".join(text_parts).strip()
+        metadata = {"filename": filename, "parser": "pymupdf"}
+        name = self._extract_name(text)
+        if name:
+            metadata["name"] = name
         return ParsedDocument(
             text=text,
             sections=self._split_sections(text),
-            metadata={"filename": filename, "parser": "pymupdf"},
+            metadata=metadata,
         )
+
+    @staticmethod
+    def _extract_name(text: str) -> str | None:
+        """Heuristic: the candidate's name is usually the first top line that is a
+        short run of alphabetic words, without contact tokens or section words."""
+        for raw in text.splitlines()[:8]:
+            line = raw.strip()
+            if not line:
+                continue
+            lowered = line.lower()
+            if "@" in line or "http" in lowered or any(ch.isdigit() for ch in line):
+                continue
+            if lowered in _NON_NAME_WORDS:
+                continue
+            tokens = line.split()
+            if not (2 <= len(tokens) <= 4):
+                continue
+            if not all(_NAME_TOKEN_RE.match(tok) for tok in tokens):
+                continue
+            # Normalize ALL-CAPS names ("JANE DOE" -> "Jane Doe").
+            return line.title() if line.isupper() else line
+        return None
 
     @staticmethod
     def _split_sections(text: str) -> dict[str, str]:
