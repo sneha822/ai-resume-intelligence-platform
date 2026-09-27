@@ -35,3 +35,4 @@ models/*
 myenv/
 src/__pycache__/
 venv/
+.venv-ui/
