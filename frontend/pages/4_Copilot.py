@@ -38,9 +38,9 @@ if prompt:
         st.markdown(prompt)
     with st.chat_message("assistant"):
         try:
-            resp = client.copilot(prompt, selected)
-            answer = resp["answer"]
+            # Live token streaming via SSE.
+            answer = st.write_stream(client.copilot_stream(prompt, selected))
         except APIError as exc:
             answer = f"⚠️ {exc.detail}"
-        st.markdown(answer)
-    st.session_state.chat.append(("assistant", answer))
+            st.markdown(answer)
+    st.session_state.chat.append(("assistant", str(answer)))

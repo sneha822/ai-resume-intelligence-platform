@@ -7,6 +7,7 @@ model rather than raw text, so callers never parse JSON by hand.
 
 from __future__ import annotations
 
+from collections.abc import AsyncIterator
 from typing import Protocol, TypeVar, runtime_checkable
 
 from pydantic import BaseModel
@@ -31,4 +32,8 @@ class LLMProvider(Protocol):
         Implementations should enforce the schema (e.g. via Instructor) and
         retry on validation failure.
         """
+        ...
+
+    def stream(self, prompt: str, system: str | None = None) -> AsyncIterator[str]:
+        """Yield the completion incrementally as text chunks."""
         ...

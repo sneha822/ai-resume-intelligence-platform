@@ -6,6 +6,7 @@ providers) so callers get throttling and fail-fast behaviour transparently.
 
 from __future__ import annotations
 
+from collections.abc import AsyncIterator
 from typing import TypeVar
 
 from pydantic import BaseModel
@@ -45,3 +46,11 @@ class ResilientLLMProvider:
         if self._breaker is not None:
             return await self._breaker.call(self._inner.structured, prompt, response_model, system)
         return await self._inner.structured(prompt, response_model, system)
+
+    async def stream(self, prompt: str, system: str | None = None) -> AsyncIterator[str]:
+        # Rate-limit the start of the stream; the circuit breaker is request-level
+        # and is not applied to a partially-consumed stream.
+        if self._rate_limiter is not None:
+            await self._rate_limiter.acquire()
+        async for chunk in self._inner.stream(prompt, system):
+            yield chunk

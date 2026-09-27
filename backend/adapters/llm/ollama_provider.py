@@ -7,6 +7,8 @@ Pydantic ``response_model`` (retrying on validation failure), preserving the
 
 from __future__ import annotations
 
+import json
+from collections.abc import AsyncIterator
 from typing import TypeVar
 
 import httpx
@@ -58,3 +60,26 @@ class OllamaProvider:
             return response_model.model_validate_json(raw)
         except ValidationError as exc:
             raise ValueError(f"Ollama returned invalid data for {response_model.__name__}") from exc
+
+    async def stream(self, prompt: str, system: str | None = None) -> AsyncIterator[str]:
+        payload: dict[str, object] = {
+            "model": self._model,
+            "prompt": prompt,
+            "stream": True,
+        }
+        if system:
+            payload["system"] = system
+        async with (
+            httpx.AsyncClient(timeout=120) as client,
+            client.stream("POST", f"{self._host}/api/generate", json=payload) as resp,
+        ):
+            resp.raise_for_status()
+            async for line in resp.aiter_lines():
+                if not line.strip():
+                    continue
+                data = json.loads(line)
+                chunk = str(data.get("response", ""))
+                if chunk:
+                    yield chunk
+                if data.get("done"):
+                    break
