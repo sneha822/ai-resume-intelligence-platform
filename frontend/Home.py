@@ -23,11 +23,28 @@ theme.hero(
     ),
 )
 
+
 # --- Live metrics -----------------------------------------------------------
-try:
-    healthy = client.health().get("status") == "healthy"
-except APIError:
-    healthy = False
+def _check_health(tries: int = 2) -> bool:
+    """Retry through a free-tier cold start (the API can take ~40s to wake)."""
+    import time
+
+    for i in range(tries):
+        try:
+            if client.health().get("status") == "healthy":
+                return True
+        except APIError:
+            pass
+        if i < tries - 1:
+            time.sleep(2)
+    return False
+
+
+with st.spinner(
+    "Connecting to the API… (free hosting sleeps when idle — the first visit can "
+    "take ~40s to wake it)"
+):
+    healthy = _check_health()
 
 candidates: list = []
 jobs: list = []
