@@ -172,7 +172,8 @@ If no provider key is configured, LLM endpoints return `503`; retrieval and CRUD
 
 See **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)** for production deployment (Docker
 Compose, managed services, and Kubernetes), including the `docker-compose.prod.yml`
-overrides, migrations, scaling, and a security checklist.
+overrides, migrations, scaling, and a security checklist. A full walkthrough of the
+concepts, decisions, and Q&A is in **[docs/INTERVIEW_PREP.md](docs/INTERVIEW_PREP.md)**.
 
 Tests that need infrastructure are skipped by default; enable them with env flags:
 - `RUN_DB_TESTS=1` — repository + pgvector integration tests (needs live Postgres)
