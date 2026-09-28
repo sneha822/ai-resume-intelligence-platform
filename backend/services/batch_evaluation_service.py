@@ -8,6 +8,7 @@ Celery ``batch_evaluate`` task.
 from __future__ import annotations
 
 import asyncio
+import logging
 import uuid
 from typing import Any
 
@@ -17,6 +18,8 @@ from backend.core.schemas.evaluation import EvaluationResult
 from backend.db.models import Candidate, Evaluation, Job
 from backend.db.repositories import CandidateRepository, EvaluationRepository
 from backend.services.evaluation_service import EvaluationService
+
+logger = logging.getLogger(__name__)
 
 
 class BatchEvaluationService:
@@ -65,9 +68,17 @@ class BatchEvaluationService:
                 )
                 return candidate, result
 
-        pairs: list[tuple[Candidate, EvaluationResult]] = list(
-            await asyncio.gather(*(evaluate_one(c) for c in candidates))
+        # Tolerate per-candidate failures (e.g. provider throttling) so a bad
+        # apple doesn't fail the whole batch — return the successes.
+        outcomes = await asyncio.gather(
+            *(evaluate_one(c) for c in candidates), return_exceptions=True
         )
+        pairs: list[tuple[Candidate, EvaluationResult]] = []
+        for candidate, outcome in zip(candidates, outcomes, strict=True):
+            if isinstance(outcome, BaseException):
+                logger.warning("Evaluation failed for %s: %s", candidate.id, outcome)
+            else:
+                pairs.append(outcome)
         return pairs
 
     async def _persist(self, job: Job, pairs: list[tuple[Candidate, EvaluationResult]]) -> None:

@@ -48,8 +48,14 @@ async def stream_copilot(
     candidates = await _gather_context(session, payload)
 
     async def event_stream() -> AsyncIterator[str]:
-        async for chunk in service.answer_stream(payload.question, candidates):
-            yield f"data: {json.dumps({'delta': chunk})}\n\n"
-        yield "data: [DONE]\n\n"
+        try:
+            async for chunk in service.answer_stream(payload.question, candidates):
+                yield f"data: {json.dumps({'delta': chunk})}\n\n"
+        except Exception as exc:  # noqa: BLE001 - surface as an in-band SSE error
+            # Once the 200 stream has started we can't change the status code, so
+            # deliver the failure as an error event instead of dropping the socket.
+            yield f"data: {json.dumps({'error': str(exc)[:300]})}\n\n"
+        finally:
+            yield "data: [DONE]\n\n"
 
     return StreamingResponse(event_stream(), media_type="text/event-stream")

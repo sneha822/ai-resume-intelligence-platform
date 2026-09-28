@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import pytest
 from fastapi import FastAPI
 from httpx import AsyncClient
 
@@ -9,8 +10,16 @@ from backend.api.deps import get_copilot_service
 from backend.core.schemas import CopilotResponse
 
 
-async def test_evaluation_requires_llm_configured(client: AsyncClient) -> None:
-    # No ANTHROPIC_API_KEY in the test env -> guard returns 503 before any DB work.
+async def test_evaluation_requires_llm_configured(
+    client: AsyncClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from backend.core.config import settings
+
+    # Force "no LLM configured" regardless of the ambient .env -> 503 before DB work.
+    monkeypatch.setattr(settings, "llm_provider", "anthropic")
+    monkeypatch.setattr(settings, "anthropic_api_key", "")
+    monkeypatch.setattr(settings, "gemini_api_key", "")
+
     resp = await client.post(
         "/api/v1/evaluations",
         json={
