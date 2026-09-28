@@ -1,6 +1,10 @@
-# Render Blueprint — deploys API + Celery worker + Streamlit frontend from this repo.
-# Secrets (sync: false) are set once in the Render dashboard, not in git.
-# Docs: https://render.com/docs/blueprint-spec
+# Render Blueprint — FREE deploy of API + Streamlit frontend from this repo.
+# Uses synchronous ingestion (INGEST_MODE=sync) so NO Celery worker and NO Redis
+# are needed — both Render web services run on the free plan.
+# Data lives on Neon (Postgres+pgvector). Secrets (sync: false) are set in the dashboard.
+# Docs: docs/deploy-render.md
+#
+# Want the async worker instead? See the commented block at the bottom.
 
 services:
   # ---- API (FastAPI) --------------------------------------------------------
@@ -11,24 +15,13 @@ services:
     dockerContext: .
     plan: free
     healthCheckPath: /health
-    # Run DB migrations (idempotent) then serve on Render's $PORT.
     dockerCommand: sh -c "python -m alembic upgrade head && uvicorn backend.main:app --host 0.0.0.0 --port $PORT"
     envVars:
       - fromGroup: airi-secrets
       - key: DEBUG
         value: "false"
-
-  # ---- Celery worker (async ingestion / batch) ------------------------------
-  # NOTE: Render background workers require a paid instance (no free plan).
-  - type: worker
-    name: airi-worker
-    runtime: docker
-    dockerfilePath: ./Dockerfile.backend
-    dockerContext: .
-    plan: starter
-    dockerCommand: celery -A backend.workers.celery_app worker --loglevel=info --concurrency=2
-    envVars:
-      - fromGroup: airi-secrets
+      - key: INGEST_MODE
+        value: sync
 
   # ---- Frontend (Streamlit) -------------------------------------------------
   - type: web
@@ -39,15 +32,14 @@ services:
     plan: free
     dockerCommand: sh -c "streamlit run frontend/Home.py --server.port $PORT --server.address 0.0.0.0 --server.headless true --browser.gatherUsageStats false"
     envVars:
-      # Set this to the API's URL after first deploy (e.g. https://airi-api.onrender.com)
+      # Set to the API's URL after first deploy (e.g. https://airi-api.onrender.com)
       - key: AIRI_API_URL
         sync: false
 
-# Shared, dashboard-managed configuration + secrets.
 envVarGroups:
   - name: airi-secrets
     envVars:
-      # Non-secret defaults (safe to keep in git):
+      # Non-secret defaults:
       - key: LLM_PROVIDER
         value: gemini
       - key: GEMINI_MODEL
@@ -59,11 +51,21 @@ envVarGroups:
       # Secrets — set these in the Render dashboard (never committed):
       - key: DATABASE_URL          # postgresql+psycopg://...neon...?sslmode=require&channel_binding=disable
         sync: false
-      - key: REDIS_URL             # rediss://...upstash...:6379/0?ssl_cert_reqs=required
-        sync: false
-      - key: CELERY_BROKER_URL     # same rediss URL
-        sync: false
-      - key: CELERY_RESULT_BACKEND # same rediss URL
-        sync: false
       - key: GEMINI_API_KEY        # your Gemini key
         sync: false
+
+# ---------------------------------------------------------------------------
+# OPTIONAL: async worker (needs Redis + a PAID Render worker plan). To use it,
+# set INGEST_MODE=async on the API, add REDIS_URL / CELERY_BROKER_URL /
+# CELERY_RESULT_BACKEND to airi-secrets, and add this service:
+#
+#   - type: worker
+#     name: airi-worker
+#     runtime: docker
+#     dockerfilePath: ./Dockerfile.backend
+#     dockerContext: .
+#     plan: starter
+#     dockerCommand: celery -A backend.workers.celery_app worker --loglevel=info --concurrency=2
+#     envVars:
+#       - fromGroup: airi-secrets
+# ---------------------------------------------------------------------------

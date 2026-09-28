@@ -12,6 +12,17 @@ with a Streamlit frontend.
 
 ---
 
+## Demo
+
+| Dashboard | Candidate deep-dive (competency radar + scorecard) | Hybrid search |
+|---|---|---|
+| ![Dashboard](docs/images/dashboard.png) | ![Deep dive](docs/images/candidate-deep-dive.png) | ![Search](docs/images/search.png) |
+
+<!-- Live demo: add your Render/Streamlit URL here once deployed. -->
+<!-- To capture the images above, see docs/images/README.md (run the app on seeded data). -->
+
+---
+
 ## Features
 
 - **Async resume ingestion** — PDF/text parsing (PyMuPDF), identity/attribute extraction
