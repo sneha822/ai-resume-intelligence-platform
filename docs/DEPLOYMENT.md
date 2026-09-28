@@ -72,6 +72,10 @@ Put a TLS-terminating reverse proxy (Caddy, nginx, or Traefik) in front of the A
 
 ---
 
+> **One-click option:** this repo ships a **Render Blueprint** (`render.yaml`). See
+> **[docs/deploy-render.md](deploy-render.md)** to deploy API + worker + frontend from
+> GitHub with your Neon + Upstash data — no local Docker needed.
+
 ## Path B — Managed data + container host (recommended for real production)
 
 Offload state to managed services (no DB/Redis ops), run the app containers on a

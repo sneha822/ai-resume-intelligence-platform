@@ -1,0 +1,10 @@
+# Backend image for Render (API + worker share this build; they differ by command).
+# Render builds the final stage of a Dockerfile, so this is single-stage on purpose.
+FROM python:3.12-slim
+ENV PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1
+WORKDIR /app
+COPY pyproject.toml README.md alembic.ini ./
+COPY backend ./backend
+RUN pip install --upgrade pip && pip install --no-cache-dir -e .
+# Default command (Render overrides per service via dockerCommand in render.yaml).
+CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000"]

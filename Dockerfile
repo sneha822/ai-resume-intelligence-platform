@@ -4,7 +4,7 @@
 FROM python:3.12-slim AS base
 ENV PYTHONUNBUFFERED=1 PYTHONDONTWRITEBYTECODE=1
 WORKDIR /app
-COPY pyproject.toml README.md ./
+COPY pyproject.toml README.md alembic.ini ./
 COPY backend ./backend
 RUN pip install --upgrade pip && pip install --no-cache-dir -e .
 
