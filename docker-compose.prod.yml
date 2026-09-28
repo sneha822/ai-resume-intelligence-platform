@@ -1,0 +1,64 @@
+# Production overrides. Use together with the base file:
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+#
+# Differences from the dev compose:
+#   - runs DB migrations once (migrate) before the API starts
+#   - API runs without --reload and with multiple workers
+#   - Celery uses the prefork pool (Linux) with bounded concurrency
+#   - serves the Streamlit frontend
+#   - restart policies on every long-running service
+#
+# For managed Postgres/pgvector + Redis (e.g. Neon + Upstash), point DATABASE_URL
+# and REDIS_URL/CELERY_* at them in .env and delete the postgres/redis services here.
+
+services:
+  migrate:
+    build:
+      context: .
+      target: base
+    env_file: .env
+    command: python -m alembic upgrade head
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  api:
+    restart: unless-stopped
+    command: uvicorn backend.main:app --host 0.0.0.0 --port 8000 --workers 2
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  worker:
+    restart: unless-stopped
+    # Prefork pool on Linux (drop the dev --pool=solo); tune concurrency to CPU + LLM rate limits.
+    command: celery -A backend.workers.celery_app worker --loglevel=info --concurrency=2
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: .
+      target: frontend
+    restart: unless-stopped
+    environment:
+      AIRI_API_URL: http://api:8000
+    ports:
+      - "8501:8501"
+    depends_on:
+      - api
+
+  postgres:
+    restart: unless-stopped
+
+  redis:
+    restart: unless-stopped
