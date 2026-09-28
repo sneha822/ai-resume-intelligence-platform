@@ -170,6 +170,10 @@ If no provider key is configured, LLM endpoints return `503`; retrieval and CRUD
 .venv/Scripts/python -m pytest
 ```
 
+See **[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)** for production deployment (Docker
+Compose, managed services, and Kubernetes), including the `docker-compose.prod.yml`
+overrides, migrations, scaling, and a security checklist.
+
 Tests that need infrastructure are skipped by default; enable them with env flags:
 - `RUN_DB_TESTS=1` — repository + pgvector integration tests (needs live Postgres)
 - `RUN_MODEL_EVALS=1` — retrieval drift gate with real fastembed embeddings
