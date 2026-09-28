@@ -1,84 +1,71 @@
-# Deploy to Render (step by step)
+# Deploy to Render (free) — step by step
 
-This deploys the **API + Celery worker + Streamlit frontend** from your GitHub repo
-using the `render.yaml` Blueprint. Your data stays on **Neon** (Postgres+pgvector) and
-**Upstash** (Redis). No local Docker needed — Render builds the images.
+Deploys the **API + Streamlit frontend** from your GitHub repo using the `render.yaml`
+Blueprint. Data stays on **Neon** (Postgres+pgvector). Ingestion runs **synchronously**
+(`INGEST_MODE=sync`) so **no Celery worker and no Redis are needed** — both services run
+on Render's **free** plan. Total cost: **$0**.
 
-**Cost note:** API and frontend run on Render's **free** web plan (they sleep after ~15
-min idle and cold-start on the next request). The **Celery worker requires a paid plan**
-(Render has no free background worker; ~$7/mo "starter"). If you want to stay free, you
-can skip the worker — see "Free-only option" at the end.
+> Free web services sleep after ~15 min idle and cold-start (~30–60s) on the next
+> request. Fine for a portfolio/demo link. (Want the async worker instead? See the
+> commented block at the bottom of `render.yaml`.)
 
----
-
-## Prerequisites (you already have these)
-- Neon `DATABASE_URL`, Upstash `rediss://` URL, and a `GEMINI_API_KEY` (from your `.env`).
-- The repo pushed to GitHub (it is).
+## Prerequisites
+- Neon `DATABASE_URL` and a `GEMINI_API_KEY` (both already in your local `.env`).
+- Repo on GitHub (it is).
 
 ## Steps
 
-### 1. Create a Render account
-Go to <https://render.com> → **Sign up with GitHub**. Authorize Render to read your repos.
+### 1. Sign up
+<https://render.com> → **Sign up with GitHub**, authorize your repos.
 
 ### 2. Create the Blueprint
-- Dashboard → **New +** → **Blueprint**.
-- Pick your repo `sneha822/ai-resume-intelligence-platform`, branch `main`.
-- Render reads `render.yaml` and shows 3 services (`airi-api`, `airi-worker`,
-  `airi-frontend`) + an env group (`airi-secrets`). Click **Apply**.
+Dashboard → **New +** → **Blueprint** → pick `sneha822/ai-resume-intelligence-platform`,
+branch `main` → **Apply**. Render reads `render.yaml` and shows `airi-api` + `airi-frontend`
++ the `airi-secrets` group.
 
-### 3. Fill in the secrets
-Render will prompt for every `sync: false` value (nothing secret is in git). Paste:
-
-**In the `airi-secrets` env group:**
-| Key | Value |
+### 3. Fill in the secrets (prompted for `sync: false` values)
+| Key | Value (copy from your local `.env`) |
 |---|---|
-| `DATABASE_URL` | `postgresql+psycopg://<user>:<pass>@<neon-host>/<db>?sslmode=require&channel_binding=disable` |
-| `REDIS_URL` | `rediss://default:<pass>@<upstash-host>:6379/0?ssl_cert_reqs=required` |
-| `CELERY_BROKER_URL` | same Upstash `rediss://` URL |
-| `CELERY_RESULT_BACKEND` | same Upstash `rediss://` URL |
+| `DATABASE_URL` | `postgresql+psycopg://…@…neon.tech/…?sslmode=require&channel_binding=disable` |
 | `GEMINI_API_KEY` | your Gemini key |
 
-> Use the **exact** Neon string with `channel_binding=disable` and the `postgresql+psycopg://`
-> prefix (not plain `postgresql://`). Use the Upstash **`rediss://`** (TLS) URL.
+(`LLM_PROVIDER=gemini`, `GEMINI_MODEL`, `EMBEDDING_*`, and `INGEST_MODE=sync` are already
+set in the Blueprint.)
 
 ### 4. First deploy
-Click **Create/Apply**. Render builds and starts the services. Watch the **`airi-api`**
-logs — on boot it runs `alembic upgrade head` (creating tables + the pgvector extension on
-Neon if not already there) then starts uvicorn. Wait for "healthy".
+Apply. Watch the **`airi-api`** logs — on boot it runs `alembic upgrade head` (creates the
+tables + pgvector extension on Neon) then starts uvicorn. Wait for healthy.
 
-### 5. Wire the frontend to the API
-- Open the **`airi-api`** service → copy its URL (e.g. `https://airi-api.onrender.com`).
-- Open **`airi-frontend`** → **Environment** → set `AIRI_API_URL` to that URL → save
-  (it redeploys).
+### 5. Seed demo data (so the live app looks full)
+Run once against the **same Neon DB** (from your machine, `.env` pointed at Neon):
+```bash
+.venv/Scripts/python -m backend.db.seed
+```
+This adds a job + 3 candidates with resumes and pre-computed evaluations (no LLM/quota),
+so the deployed app shows populated search + radar charts immediately.
 
-### 6. Verify
-- Open the **`airi-api`** URL + `/health` → `{"status":"healthy",...}` and `/docs` for Swagger.
-- Open the **`airi-frontend`** URL → the dashboard should show 🟢 Healthy + your counts.
-- Try **Search** and **Copilot** in the UI. Upload a resume (needs the worker running).
+### 6. Wire the frontend to the API
+Open **`airi-api`** → copy its URL (e.g. `https://airi-api.onrender.com`). Open
+**`airi-frontend`** → **Environment** → set `AIRI_API_URL` to that URL → save (redeploys).
 
----
+### 7. Verify
+- `airi-api` URL + `/health` → healthy; `/docs` → Swagger.
+- `airi-frontend` URL → dashboard shows 🟢 Healthy + counts; try **Search** and open a
+  candidate to see the radar/scorecard.
 
-## Ingest resumes
-- **With the worker (paid):** use the UI "upload" or `POST /api/v1/resumes` — it queues to
-  Upstash and the worker processes it.
-- **Anytime (no worker):** run the ingest script locally against the same Neon DB:
-  ```bash
-  .venv/Scripts/python -c "import base64,glob,os; from backend.workers.tasks import ingest_resume; [ingest_resume(os.path.basename(p), base64.b64encode(open(p,'rb').read()).decode()) for p in glob.glob('legacy/data/raw/*.pdf')]"
-  ```
-  (Runs the pipeline directly; writes to the same Neon DB your deployed app reads.)
+Put both URLs on your resume/README. (First hit after idle wakes the free service.)
 
-## Free-only option (skip the paid worker)
-In `render.yaml`, delete the `airi-worker` service block, commit, and re-sync the Blueprint.
-Everything except async upload works (search, single + batch evaluation, copilot). Ingest
-via the script above.
+## Notes
+- **Uploads** work in sync mode (the pipeline runs inline in the request; first upload is
+  slower because the embedding model downloads once per container).
+- **LLM features** (evaluation, copilot) use your Gemini key; on free-tier `429`, wait or
+  enable billing — the app degrades gracefully.
+- **Async worker (optional):** uncomment the worker block in `render.yaml`, set
+  `INGEST_MODE=async`, add a Redis (Upstash) URL to the secrets, and use a paid worker plan.
 
 ## Troubleshooting
-- **API deploy fails on migrate** → check `DATABASE_URL` (prefix `postgresql+psycopg://`,
-  `channel_binding=disable`), and that the Neon role can `CREATE EXTENSION vector`.
-- **Worker can't reach Redis** → use the `rediss://` (TLS) URL with `?ssl_cert_reqs=required`.
-- **Frontend shows "API offline"** → `AIRI_API_URL` is wrong/unset, or the free API is
-  cold-starting (retry after ~30s).
-- **LLM endpoints return 503** → `GEMINI_API_KEY` not set in the env group.
-- **429 from Gemini** → free-tier quota; wait or enable billing.
-- **Free service is slow first hit** → free web services sleep when idle; the first request
-  wakes them (cold start).
+- **Migrate fails** → check `DATABASE_URL` (prefix `postgresql+psycopg://`,
+  `channel_binding=disable`); the Neon role must allow `CREATE EXTENSION vector`.
+- **Frontend "API offline"** → `AIRI_API_URL` wrong/unset, or the free API is cold-starting
+  (retry ~30s).
+- **LLM 503** → `GEMINI_API_KEY` not set. **429** → Gemini free-tier quota.

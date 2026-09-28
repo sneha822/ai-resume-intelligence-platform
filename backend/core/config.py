@@ -28,6 +28,11 @@ class Settings(BaseSettings):
     celery_broker_url: str = Field(default="redis://localhost:6379/0")
     celery_result_backend: str = Field(default="redis://localhost:6379/1")
 
+    # --- Ingestion mode ---
+    # "async" enqueues to Celery (needs a worker + Redis); "sync" runs the pipeline
+    # inline in the request (no worker/Redis needed — good for free hosting).
+    ingest_mode: str = Field(default="async")
+
     # --- LLM ---
     llm_provider: str = Field(default="anthropic")  # "anthropic" | "gemini" | "ollama"
     llm_model: str = Field(default="claude-sonnet-5")
