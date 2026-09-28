@@ -1,236 +1,186 @@
 # AI Resume Intelligence & Interview Copilot
 
-An end-to-end resume intelligence platform that analyzes
-candidate profiles against job descriptions, extracts
-relevant skills, calculates compatibility scores, and
-ranks candidates for a specific role.
+An enterprise-grade platform for recruiting teams: ingest resumes, search a candidate
+pool with hybrid semantic + keyword retrieval, score candidates against a job with an
+LLM rubric, and chat with a grounded recruiting copilot — all behind a FastAPI backend
+with a Streamlit frontend.
 
-## 🚀 Features
+> **Architecture:** Domain-Driven, ports & adapters. The core depends only on abstract
+> **ports**; concrete **adapters** (LLM providers, embedder, parser, vector store) are
+> swapped by configuration. Switching the LLM from Claude to Gemini to a local model is
+> a one-line `.env` change.
 
-- Resume parsing
-- Email and phone extraction
-- Skill extraction
-- Job description keyword extraction
-- Resume ↔ JD token matching
-- Similarity scoring
-- Match-score calculation
-- Match explanation
-- Candidate ranking
-- Batch candidate evaluation
-- Error handling and logging
-- Interactive Streamlit dashboard
+---
 
-## 🏗️ Architecture
+## Features
 
-Resume
-  ↓
-Resume Parser
-  ↓
-Skill Extraction
-  ↓
-Job Description Parser
-  ↓
-Keyword Matching
-  ↓
-Similarity Scoring
-  ↓
-Candidate Ranking
-  ↓
-Batch Evaluation
-  ↓
-Streamlit Dashboard
+- **Async resume ingestion** — PDF/text parsing (PyMuPDF), identity/attribute extraction
+  (LLM structured output, with a regex/heuristic fallback), embedding, and indexing.
+- **Hybrid search** — dense vectors (pgvector) + BM25, fused with Reciprocal Rank Fusion.
+- **Rubric evaluation** — multi-criteria scoring (Technical / Domain / Experience /
+  Leadership) with chain-of-thought reasoning, returned as validated structured output.
+  Single and **bulk/batch** evaluation.
+- **Recruiting copilot** — grounded Q&A over candidate context, with **SSE streaming**.
+- **Multi-provider LLM** — Anthropic (Claude), Google (Gemini), or local Ollama.
+- **Resilience** — Tenacity retries, a token-bucket rate limiter, and a circuit breaker
+  around LLM calls; graceful degradation (partial batches, in-band stream errors).
+- **Observability** — OpenTelemetry traces with per-call token/cost/latency spans.
+- **Frontend** — Streamlit dashboard: search, candidate deep-dive (competency radar,
+  interview scorecard, side-by-side compare), jobs, and a streaming copilot chat.
+- **Quality gates** — ruff, black, mypy (strict), pytest, and retrieval/scoring
+  evaluation drift gates.
 
-## 🛠️ Tech Stack
+---
 
-- Python
-- Pandas
-- SQLite
-- Streamlit
-- Scikit-learn
-- Git & GitHub
+## Architecture
 
-## 📂 Project Structure
+```
+                 ┌──────────────┐        HTTP        ┌───────────────────────────┐
+                 │  Streamlit   │  ───────────────▶  │        FastAPI API        │
+                 │  frontend/   │                    │        backend/api        │
+                 └──────────────┘                    └────────────┬──────────────┘
+                                                                  │  (DI: deps.py)
+                                    ┌─────────────────────────────┼───────────────────────┐
+                                    ▼                             ▼                        ▼
+                            services/ (use-cases)          core/ports (Protocols)    db/ (SQLAlchemy)
+                    ingestion · retrieval · evaluation      LLMProvider · Embedder    repositories
+                    batch · copilot · extraction            VectorStore · Parser      Postgres+pgvector
+                                    │                             ▲
+                                    ▼                             │  implemented by
+                            adapters/ ── llm (anthropic│gemini│ollama, resilient)
+                                        ── embeddings (fastembed/ONNX)
+                                        ── parsing (PyMuPDF)
+                                        ── vectorstore (pgvector)
+                                        ── retrieval (BM25)
 
-ai-resume-intelligence-platform/
+  workers/  Celery + Redis (async ingest / batch)      observability/  OpenTelemetry
+```
 
-├── app.py
-├── config.py
-├── requirements.txt
-├── README.md
-├── data/
-├── src/
-└── tests/
+**Layout** (`backend/`):
 
-## ⚙️ Installation
+| Package | Responsibility |
+|---|---|
+| `core/ports` | Abstract interfaces (`LLMProvider`, `Embedder`, `VectorStore`, `DocumentParser`) |
+| `core/schemas` | Pydantic v2 I/O + LLM structured-output contracts |
+| `core/resiliency` | Token-bucket rate limiter, circuit breaker |
+| `services` | Use-cases: ingestion, retrieval, evaluation, batch, copilot, extraction |
+| `adapters` | Concrete implementations of the ports |
+| `api/v1` | FastAPI routers + DI + RFC-7807 errors |
+| `db` | SQLAlchemy 2.0 (async) models, repositories, Alembic migrations |
+| `workers` | Celery app + tasks |
+| `observability` | OpenTelemetry setup + LLM span helpers |
+| `eval` | IR metrics for the evaluation drift gates |
 
-Clone the repository:
+The original V1 codebase is preserved under `legacy/` (and on the `v1-legacy-baseline` branch).
 
-git clone <your-repository-url>
+---
 
-Create an environment:
+## Quickstart
 
+### 1. Prerequisites
+- Python 3.10+ (developed/verified on 3.12)
+- Postgres with the **pgvector** extension, and Redis — via Docker, or managed
+  (e.g. Neon + Upstash)
+
+### 2. Install
+```bash
 python -m venv .venv
+.venv/Scripts/python -m pip install -e ".[dev]"      # backend + dev tools
+# Frontend deps are kept in a separate venv to avoid resolver conflicts:
+python -m venv .venv-ui
+.venv-ui/Scripts/python -m pip install -e ".[frontend]"
+```
 
-Activate the environment.
+### 3. Configure
+```bash
+cp .env.example .env
+# then edit .env — see "Configuration" below
+```
 
-Install dependencies:
+### 4. Infra + migrations
+```bash
+docker compose up -d postgres redis     # or point DATABASE_URL/REDIS_URL at managed services
+.venv/Scripts/python -m alembic upgrade head
+```
 
-pip install -r requirements.txt
+### 5. Run
+```bash
+# API (use `python -m backend` on Windows — sets the SelectorEventLoop for async psycopg)
+.venv/Scripts/python -m backend                       # http://127.0.0.1:8000
 
-## ▶️ Run the Application
+# Celery worker (Windows requires --pool=solo)
+.venv/Scripts/celery -A backend.workers.celery_app worker --loglevel=info --pool=solo
 
-streamlit run app.py
+# Frontend
+AIRI_API_URL=http://127.0.0.1:8000 .venv-ui/Scripts/python -m streamlit run frontend/Home.py
+```
 
-## 📊 Pipeline
+Open the API docs at `http://127.0.0.1:8000/docs` and the UI at `http://localhost:8501`.
 
-1. Upload resumes
-2. Parse candidate information
-3. Upload/select a job description
-4. Extract JD keywords
-5. Match candidate skills
-6. Calculate match scores
-7. Rank candidates
-8. Review candidate explanations
+---
 
-## 🧪 Testing
+## Configuration
 
-The project contains day-by-day testing scripts covering:
+Key `.env` settings (full list in `.env.example`):
 
-- Resume parsing
-- Feature engineering
-- Scoring
-- JD parsing
-- Matching
-- Ranking
-- Batch evaluation
-- Error handling
-- End-to-end integration
+| Variable | Purpose |
+|---|---|
+| `DATABASE_URL` | `postgresql+psycopg://…` (managed Postgres, e.g. Neon: append `?sslmode=require&channel_binding=disable`) |
+| `REDIS_URL` / `CELERY_*` | Redis broker/backend (managed, e.g. Upstash: `rediss://…?ssl_cert_reqs=required`) |
+| `LLM_PROVIDER` | `anthropic` \| `gemini` \| `ollama` |
+| `ANTHROPIC_API_KEY` / `LLM_MODEL` | Claude (e.g. `claude-sonnet-5`) |
+| `GEMINI_API_KEY` (or `GOOGLE_API_KEY`) / `GEMINI_MODEL` | Gemini (e.g. `gemini-3.8-flash`) |
+| `OLLAMA_MODEL` | Local model when `LLM_PROVIDER=ollama` |
+| `EMBEDDING_MODEL` / `EMBEDDING_DIM` | fastembed ONNX model (default `BAAI/bge-base-en-v1.5`, 768) |
+| `OTEL_ENABLED` / `OTEL_EXPORTER_OTLP_ENDPOINT` | OpenTelemetry (point at Phoenix/any OTLP collector) |
 
-## 🎯 Project Goal
+### LLM providers
+The active provider is chosen by `LLM_PROVIDER`; all LLM features work on any of them.
+- **Anthropic** — Claude via Instructor for schema-validated structured output.
+- **Gemini** — google-genai with native `response_schema` structured output.
+  Note: some model ids retire (e.g. `gemini-2.5-flash` → use `gemini-3.8-flash`).
+- **Ollama** — fully local/offline; JSON-mode structured output validated by Pydantic.
 
-The goal of this project is to build an engineering-focused
-resume intelligence system that demonstrates practical
-application of data processing, NLP-style text matching,
-scoring systems, backend logic, and interactive deployment.
+If no provider key is configured, LLM endpoints return `503`; retrieval and CRUD still work.
 
-## 🎯 Project Highlights
+---
 
-This project demonstrates an end-to-end candidate intelligence
-pipeline built around modular data processing and text matching.
+## API (v1)
 
-### Core capabilities
+| Method | Path | Description |
+|---|---|---|
+| `POST` | `/api/v1/resumes` | Upload a resume (async ingest → `202` + `task_id`) |
+| `GET` | `/api/v1/resumes/tasks/{id}` | Ingestion task status |
+| `POST` | `/api/v1/search` | Hybrid RRF candidate search |
+| `GET` | `/api/v1/candidates` · `/{id}` | List / deep-dive (resumes, evaluations) |
+| `POST` | `/api/v1/jobs` · CRUD | Manage job postings |
+| `POST` | `/api/v1/evaluations` | Single rubric evaluation |
+| `POST` | `/api/v1/evaluations/batch` | Bulk evaluation (partial-result tolerant) |
+| `POST` | `/api/v1/copilot` · `/copilot/stream` | Grounded Q&A (JSON or SSE stream) |
+| `GET` | `/health` · `/ready` | Liveness / readiness |
 
-- Resume information extraction
-- Skill extraction
-- Job description parsing
-- Resume-to-JD keyword matching
-- Similarity scoring
-- Match-score calculation
-- Explainable match results
-- Candidate ranking
-- Batch candidate evaluation
-- Edge-case handling
-- Logging
-- Interactive Streamlit interface
+---
 
-## 🔄 End-to-End Workflow
+## Development
 
-```text
-Candidate Resumes
-        │
-        ▼
-   File Handler
-        │
-        ▼
-   Resume Parser
-        │
-        ├── Email
-        ├── Phone
-        └── Skills
-        │
-        ▼
-Job Description Parser
-        │
-        ▼
-Keyword Matching
-        │
-        ▼
-Similarity Scoring
-        │
-        ▼
-Match Score
-        │
-        ▼
-Candidate Ranking
-        │
-        ▼
-Batch Evaluation
-        │
-        ▼
-Streamlit Dashboard
+```bash
+.venv/Scripts/ruff check backend frontend tests
+.venv/Scripts/black --check backend frontend tests
+.venv/Scripts/mypy backend
+.venv/Scripts/python -m pytest
+```
 
-## 🖥️ Application Preview
+Tests that need infrastructure are skipped by default; enable them with env flags:
+- `RUN_DB_TESTS=1` — repository + pgvector integration tests (needs live Postgres)
+- `RUN_MODEL_EVALS=1` — retrieval drift gate with real fastembed embeddings
+- `RUN_LLM_EVALS=1` — scoring drift gate (needs a configured LLM)
 
-### Dashboard
+CI (`.github/workflows/ci.yml`) runs ruff, black, mypy, and pytest on every push/PR.
 
-![Dashboard](docs/images/dashboard.png)
+---
 
-### Candidate Leaderboard
+## Tech stack
 
-![Leaderboard](docs/images/leaderboard.png)
-
-### Candidate Analysis
-
-![Candidate Analysis](docs/images/candidate-analysis.png)
-
-## ⚠️ Current Limitations
-
-- Resume parsing currently depends on the supported input formats
-  and extraction rules.
-- Matching is primarily based on extracted skills and textual
-  similarity.
-- Semantic understanding of equivalent skills is limited.
-- Candidate scoring is a deterministic baseline rather than a
-  learned hiring model.
-- The current system does not replace human recruitment decisions.
-
-## 🔮 Future Improvements
-
-Potential extensions include:
-
-- Transformer-based semantic resume matching
-- Better PDF/DOCX extraction
-- Experience-level extraction
-- Education matching
-- Entity recognition for organizations and technologies
-- Learned candidate-job ranking models
-- Explainable scoring improvements
-- Persistent production database
-- Authentication and role-based access
-- Cloud deployment
-
-## 🗺️ Development Roadmap
-
-| Phase | Days | Focus |
-|---|---:|---|
-| Foundation | 1–10 | Parsing, validation and database |
-| Data Pipeline | 11–20 | Processing and application foundation |
-| Feature Engineering | 21–30 | Candidate features and scoring |
-| Intelligence Layer | 31–40 | Candidate scoring and platform improvements |
-| Job Matching | 41–46 | JD parsing, matching and ranking |
-| Reliability | 47–48 | Error handling and integration |
-| Portfolio | 49–50 | UI, documentation and finalization |
-
-## ✅ Project Status
-
-**Completed — 50-Day Engineering Project**
-
-The current version includes the complete resume-to-job
-matching pipeline, batch candidate evaluation, ranking,
-error handling, Streamlit interface, and project documentation.
-
-## 👩‍💻 Author
-
-Sneha Kumari
-
-B.Tech — Electronics & Communication Engineering
+FastAPI · SQLAlchemy 2.0 (async) + Alembic · Postgres + pgvector · Pydantic v2 ·
+Celery + Redis · fastembed (ONNX) · rank-bm25 · PyMuPDF · Anthropic / google-genai /
+Ollama · OpenTelemetry · Streamlit + Plotly · ruff / black / mypy / pytest.
