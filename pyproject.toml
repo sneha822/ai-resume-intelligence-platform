@@ -16,6 +16,7 @@ dependencies = [
     # --- Structured LLM output ---
     "anthropic>=0.39.0",
     "instructor>=1.6.0",
+    "google-genai>=1.0.0",
     "tenacity>=9.0.0",
     # --- Persistence (Postgres + pgvector) ---
     "sqlalchemy[asyncio]>=2.0.35",
@@ -107,7 +108,7 @@ ignore_missing_imports = true
 # We don't type against these heavy libs directly; skip-follow keeps analysis
 # fast and avoids surfacing their internal typing quirks.
 [[tool.mypy.overrides]]
-module = ["fastembed.*", "pymupdf.*", "numpy", "numpy.*"]
+module = ["fastembed.*", "pymupdf.*", "numpy", "numpy.*", "google.*"]
 follow_imports = "skip"
 ignore_missing_imports = true
 

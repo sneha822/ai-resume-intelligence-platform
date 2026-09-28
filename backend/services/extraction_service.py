@@ -38,12 +38,11 @@ def build_default_extractor() -> ResumeExtractor | None:
     Wraps the provider in the resilient decorator (rate limit + circuit breaker),
     matching how evaluation/copilot call the LLM.
     """
-    from backend.core.config import settings
+    from backend.adapters.llm.factory import get_llm_provider, is_llm_configured
 
-    if settings.llm_provider == "anthropic" and not settings.anthropic_api_key:
+    if not is_llm_configured():
         return None
 
-    from backend.adapters.llm.factory import get_llm_provider
     from backend.adapters.llm.resilient import ResilientLLMProvider
     from backend.core.resiliency.circuit_breaker import CircuitBreaker
     from backend.core.resiliency.rate_limiter import TokenBucketRateLimiter

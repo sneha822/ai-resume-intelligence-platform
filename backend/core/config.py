@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from functools import lru_cache
 
-from pydantic import Field
+from pydantic import AliasChoices, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -29,10 +29,16 @@ class Settings(BaseSettings):
     celery_result_backend: str = Field(default="redis://localhost:6379/1")
 
     # --- LLM ---
-    llm_provider: str = Field(default="anthropic")  # "anthropic" | "ollama"
+    llm_provider: str = Field(default="anthropic")  # "anthropic" | "gemini" | "ollama"
     llm_model: str = Field(default="claude-sonnet-5")
     anthropic_api_key: str = Field(default="")
     ollama_model: str = Field(default="llama3.2")
+    # Gemini (accepts GEMINI_API_KEY or GOOGLE_API_KEY)
+    gemini_api_key: str = Field(
+        default="",
+        validation_alias=AliasChoices("GEMINI_API_KEY", "GOOGLE_API_KEY"),
+    )
+    gemini_model: str = Field(default="gemini-3.8-flash")
 
     # --- Embeddings / retrieval ---
     # CPU-friendly ONNX embeddings via fastembed (no torch). 768-dim.

@@ -55,12 +55,12 @@ def _resilient_llm() -> object:
 def _require_llm_configured() -> None:
     from fastapi import HTTPException, status
 
-    from backend.core.config import settings
+    from backend.adapters.llm.factory import is_llm_configured
 
-    if settings.llm_provider == "anthropic" and not settings.anthropic_api_key:
+    if not is_llm_configured():
         raise HTTPException(
             status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="LLM not configured (set ANTHROPIC_API_KEY or LLM_PROVIDER=ollama).",
+            detail="LLM not configured (set the provider's API key, " "or LLM_PROVIDER=ollama).",
         )
 
 

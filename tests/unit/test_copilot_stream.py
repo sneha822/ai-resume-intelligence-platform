@@ -64,3 +64,24 @@ async def test_stream_endpoint_emits_sse(app: FastAPI, client: AsyncClient) -> N
     assert '"delta": "Ada "' in body
     assert '"delta": "highest."' in body
     assert "data: [DONE]" in body
+
+
+class _RaisingStreamCopilot:
+    async def answer_stream(
+        self, question: str, candidates: list[dict[str, object]]
+    ) -> AsyncIterator[str]:
+        yield "partial "
+        raise RuntimeError("provider 503")
+
+
+async def test_stream_endpoint_reports_midstream_error(app: FastAPI, client: AsyncClient) -> None:
+    app.dependency_overrides[get_copilot_service] = lambda: _RaisingStreamCopilot()
+
+    resp = await client.post("/api/v1/copilot/stream", json={"question": "x", "candidate_ids": []})
+    # Stream started 200; the mid-stream failure comes back as an in-band error
+    # event followed by [DONE] (connection is not dropped).
+    assert resp.status_code == 200
+    body = resp.text
+    assert '"delta": "partial "' in body
+    assert '"error"' in body
+    assert "data: [DONE]" in body
