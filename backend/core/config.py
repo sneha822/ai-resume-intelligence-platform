@@ -33,6 +33,10 @@ class Settings(BaseSettings):
     # inline in the request (no worker/Redis needed — good for free hosting).
     ingest_mode: str = Field(default="async")
 
+    # Bulk evaluation concurrency. 1 = sequential (safest for free-tier LLM rate
+    # limits, which 429 under concurrent calls).
+    batch_concurrency: int = Field(default=1)
+
     # --- LLM ---
     llm_provider: str = Field(default="anthropic")  # "anthropic" | "gemini" | "ollama"
     llm_model: str = Field(default="claude-sonnet-5")
