@@ -29,8 +29,9 @@ class APIClient:
         self._timeout = timeout
 
     def _request(self, method: str, url: str, **kwargs: Any) -> Any:
+        timeout = kwargs.pop("timeout", self._timeout)
         try:
-            resp = httpx.request(method, url, timeout=self._timeout, **kwargs)
+            resp = httpx.request(method, url, timeout=timeout, **kwargs)
         except httpx.RequestError as exc:
             raise APIError(0, f"Cannot reach API at {self._base}: {exc}") from exc
         if resp.status_code >= 400:
@@ -80,10 +81,12 @@ class APIClient:
         )
 
     def evaluate_batch(self, job_id: str, candidate_ids: list[str] | None = None) -> dict[str, Any]:
+        # Bulk LLM scoring is slow (sequential) and the API may be cold — allow more time.
         return self._request(
             "POST",
             f"{self._api}/evaluations/batch",
             json={"job_id": job_id, "candidate_ids": candidate_ids or []},
+            timeout=240,
         )
 
     # --- copilot ---

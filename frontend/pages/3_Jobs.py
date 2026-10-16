@@ -33,6 +33,11 @@ except APIError as exc:
     st.error(exc.detail)
     jobs = []
 
+try:
+    total_candidates = len(client.list_candidates())
+except APIError:
+    total_candidates = 0
+
 if not jobs:
     st.caption("No jobs yet.")
 for j in jobs:
@@ -42,9 +47,16 @@ for j in jobs:
         unsafe_allow_html=True,
     )
     if st.button("Evaluate all candidates", key=f"batch-{j['id']}"):
-        with st.spinner("Running bulk evaluation..."):
+        with st.spinner("Scoring candidates with the LLM… (can take up to a minute)"):
             try:
                 res = client.evaluate_batch(j["id"])
-                st.success(f"Evaluated {res['evaluated']} candidate(s).")
+                n = res["evaluated"]
+                if total_candidates and n < total_candidates:
+                    st.warning(
+                        f"Evaluated {n} of {total_candidates}. Some were skipped due to "
+                        "the free-tier LLM rate limit — click again to score the rest."
+                    )
+                else:
+                    st.success(f"Evaluated {n} candidate(s). See the Candidates tab.")
             except APIError as exc:
                 st.error(f"Batch evaluation failed: {exc.detail}")

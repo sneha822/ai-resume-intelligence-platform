@@ -10,6 +10,7 @@ from __future__ import annotations
 from fastapi import APIRouter, HTTPException, status
 
 from backend.api.deps import EvaluationServiceDep, SessionDep
+from backend.core.config import settings
 from backend.core.schemas import (
     BatchEvaluationItem,
     BatchEvaluationRequest,
@@ -69,7 +70,7 @@ async def create_batch_evaluations(
     if job is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Job not found")
 
-    batch = BatchEvaluationService(session, service)
+    batch = BatchEvaluationService(session, service, concurrency=settings.batch_concurrency)
     pairs = await batch.evaluate_job(job, payload.candidate_ids or None)
 
     return BatchEvaluationResponse(
