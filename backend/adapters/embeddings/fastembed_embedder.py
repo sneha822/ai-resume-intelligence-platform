@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import asyncio
 from functools import lru_cache
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 from backend.core.config import settings
@@ -16,11 +17,17 @@ if TYPE_CHECKING:
     from fastembed import TextEmbedding
 
 
+def _default_cache_dir() -> str:
+    # Persistent (not the OS temp dir, which gets cleared) so the model isn't
+    # re-downloaded on every run.
+    return settings.embedding_cache_dir or str(Path.home() / ".cache" / "ai-resume-fastembed")
+
+
 @lru_cache(maxsize=2)
-def _load_model(model_name: str) -> TextEmbedding:
+def _load_model(model_name: str, cache_dir: str) -> TextEmbedding:
     from fastembed import TextEmbedding
 
-    return TextEmbedding(model_name=model_name)
+    return TextEmbedding(model_name=model_name, cache_dir=cache_dir)
 
 
 class FastEmbedEmbedder:
@@ -29,13 +36,14 @@ class FastEmbedEmbedder:
     def __init__(self, model_name: str | None = None, dim: int | None = None) -> None:
         self._model_name = model_name or settings.embedding_model
         self._dim = dim or settings.embedding_dim
+        self._cache_dir = _default_cache_dir()
 
     @property
     def dimension(self) -> int:
         return self._dim
 
     def _embed_sync(self, texts: list[str]) -> list[list[float]]:
-        model = _load_model(self._model_name)
+        model = _load_model(self._model_name, self._cache_dir)
         return [vector.tolist() for vector in model.embed(texts)]
 
     async def embed(self, text: str) -> list[float]:

@@ -1,0 +1,72 @@
+{
+  "_about": "Labeled role/resume relevance benchmark for evaluating retrieval + scoring. Resumes are SYNTHETIC (no real PII). Labels: strong = clear fit, moderate = partial/adjacent fit, weak = not a fit. 5 roles, 16 resumes, 40 labeled pairs.",
+  "roles": [
+    {"id": "ml_engineer", "title": "Senior Machine Learning Engineer", "description": "Build production RAG and NLP systems. Python, transformers, vector search, LLM fine-tuning, and strong software engineering."},
+    {"id": "backend_engineer", "title": "Backend Software Engineer", "description": "Design REST APIs and microservices. Python or Java, PostgreSQL, Docker, async, and distributed systems."},
+    {"id": "frontend_engineer", "title": "Frontend Engineer", "description": "Build web UIs with React and TypeScript. CSS, accessibility, state management, and web performance."},
+    {"id": "data_scientist", "title": "Data Scientist", "description": "Statistical modeling and ML. Python, pandas, scikit-learn, SQL, experimentation, and data visualization."},
+    {"id": "devops_engineer", "title": "DevOps / SRE Engineer", "description": "Operate cloud infrastructure. Kubernetes, Terraform, CI/CD, AWS, monitoring, and reliability."}
+  ],
+  "resumes": [
+    {"id": "ml1", "name": "ML Engineer A", "text": "Machine learning engineer, 5 years. Built production RAG and NLP systems with Python, PyTorch, transformers, and Hugging Face. Fine-tuned LLMs and shipped semantic search on a vector database."},
+    {"id": "ml2", "name": "ML Engineer B", "text": "ML engineer specializing in NLP. Trained transformer models for text classification and built embedding-based retrieval. Python, PyTorch, vector search, MLOps."},
+    {"id": "ml3", "name": "ML Engineer C", "text": "Applied scientist focused on large language models: prompt engineering, fine-tuning, and evaluation. Python, transformers, RAG pipelines, and model serving."},
+    {"id": "ds1", "name": "Data Scientist A", "text": "Data scientist, 4 years. Predictive modeling and NLP text classification with Python, scikit-learn, and pandas. Strong statistics and experimentation; some transformers experience."},
+    {"id": "ds2", "name": "Data Scientist B", "text": "Data scientist with heavy SQL and analytics. Built dashboards, A/B tests, and regression models. Python, pandas, Tableau, statistics."},
+    {"id": "be1", "name": "Backend Engineer A", "text": "Backend engineer, 6 years. Built Java Spring Boot microservices and REST APIs on PostgreSQL. Experience with Kafka, Redis, and high-throughput distributed systems."},
+    {"id": "be2", "name": "Backend Engineer B", "text": "Python backend engineer. FastAPI and Django REST services, PostgreSQL, async programming, Docker, and CI/CD. Designed scalable APIs."},
+    {"id": "be3", "name": "Full-Stack Engineer", "text": "Full-stack engineer. Node.js and Python backends with REST APIs, plus React frontends. PostgreSQL, Docker, and cloud deployment."},
+    {"id": "fe1", "name": "Frontend Engineer A", "text": "Frontend engineer, 4 years. React, TypeScript, Redux, and modern CSS. Focus on accessibility, design systems, and web performance optimization."},
+    {"id": "fe2", "name": "Frontend Engineer B", "text": "UI engineer building responsive web apps with React, Next.js, and TypeScript. Component libraries, testing with Jest, and Core Web Vitals."},
+    {"id": "do1", "name": "DevOps Engineer A", "text": "DevOps engineer managing Kubernetes clusters and Terraform infrastructure on AWS. CI/CD pipelines, Prometheus/Grafana observability, and incident response."},
+    {"id": "do2", "name": "SRE B", "text": "Site reliability engineer. Automated deployments with GitHub Actions and Terraform, ran EKS clusters, and owned SLOs and on-call. AWS, Docker, monitoring."},
+    {"id": "pm1", "name": "Product Manager", "text": "Product manager for SaaS products. Roadmap planning, stakeholder alignment, agile delivery, and user research. Light SQL for analytics."},
+    {"id": "qa1", "name": "QA Engineer", "text": "QA automation engineer. Built Selenium and Playwright test suites, API testing, and CI integration. Python and JavaScript."},
+    {"id": "hybrid1", "name": "ML Platform Engineer", "text": "ML platform engineer bridging ML and backend: built model-serving APIs with FastAPI and Docker, feature stores on PostgreSQL, and deployment pipelines for ML models."},
+    {"id": "hybrid2", "name": "DS to ML", "text": "Data scientist transitioning to ML engineering. Strong Python, pandas, and scikit-learn; recently built an NLP pipeline with transformers and deployed it as an API."}
+  ],
+  "labels": [
+    {"role_id": "ml_engineer", "resume_id": "ml1", "label": "strong"},
+    {"role_id": "ml_engineer", "resume_id": "ml2", "label": "strong"},
+    {"role_id": "ml_engineer", "resume_id": "ml3", "label": "strong"},
+    {"role_id": "ml_engineer", "resume_id": "hybrid2", "label": "strong"},
+    {"role_id": "ml_engineer", "resume_id": "hybrid1", "label": "moderate"},
+    {"role_id": "ml_engineer", "resume_id": "ds1", "label": "moderate"},
+    {"role_id": "ml_engineer", "resume_id": "be2", "label": "weak"},
+    {"role_id": "ml_engineer", "resume_id": "fe1", "label": "weak"},
+    {"role_id": "ml_engineer", "resume_id": "pm1", "label": "weak"},
+
+    {"role_id": "backend_engineer", "resume_id": "be1", "label": "strong"},
+    {"role_id": "backend_engineer", "resume_id": "be2", "label": "strong"},
+    {"role_id": "backend_engineer", "resume_id": "be3", "label": "strong"},
+    {"role_id": "backend_engineer", "resume_id": "hybrid1", "label": "strong"},
+    {"role_id": "backend_engineer", "resume_id": "do1", "label": "moderate"},
+    {"role_id": "backend_engineer", "resume_id": "ml1", "label": "moderate"},
+    {"role_id": "backend_engineer", "resume_id": "fe1", "label": "weak"},
+    {"role_id": "backend_engineer", "resume_id": "ds2", "label": "weak"},
+
+    {"role_id": "frontend_engineer", "resume_id": "fe1", "label": "strong"},
+    {"role_id": "frontend_engineer", "resume_id": "fe2", "label": "strong"},
+    {"role_id": "frontend_engineer", "resume_id": "be3", "label": "moderate"},
+    {"role_id": "frontend_engineer", "resume_id": "qa1", "label": "weak"},
+    {"role_id": "frontend_engineer", "resume_id": "be1", "label": "weak"},
+    {"role_id": "frontend_engineer", "resume_id": "ml1", "label": "weak"},
+
+    {"role_id": "data_scientist", "resume_id": "ds1", "label": "strong"},
+    {"role_id": "data_scientist", "resume_id": "ds2", "label": "strong"},
+    {"role_id": "data_scientist", "resume_id": "hybrid2", "label": "strong"},
+    {"role_id": "data_scientist", "resume_id": "ml2", "label": "moderate"},
+    {"role_id": "data_scientist", "resume_id": "ml1", "label": "moderate"},
+    {"role_id": "data_scientist", "resume_id": "be1", "label": "weak"},
+    {"role_id": "data_scientist", "resume_id": "fe1", "label": "weak"},
+
+    {"role_id": "devops_engineer", "resume_id": "do1", "label": "strong"},
+    {"role_id": "devops_engineer", "resume_id": "do2", "label": "strong"},
+    {"role_id": "devops_engineer", "resume_id": "be2", "label": "moderate"},
+    {"role_id": "devops_engineer", "resume_id": "be1", "label": "moderate"},
+    {"role_id": "devops_engineer", "resume_id": "ml1", "label": "weak"},
+    {"role_id": "devops_engineer", "resume_id": "fe1", "label": "weak"},
+    {"role_id": "devops_engineer", "resume_id": "pm1", "label": "weak"},
+    {"role_id": "devops_engineer", "resume_id": "qa1", "label": "moderate"}
+  ]
+}
