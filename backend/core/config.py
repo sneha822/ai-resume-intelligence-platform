@@ -53,6 +53,9 @@ class Settings(BaseSettings):
     # CPU-friendly ONNX embeddings via fastembed (no torch). 768-dim.
     embedding_model: str = Field(default="BAAI/bge-base-en-v1.5")
     embedding_dim: int = Field(default=768)
+    # Persistent model cache dir (empty = ~/.cache/ai-resume-fastembed, not the OS
+    # temp dir which gets cleared and forces a re-download).
+    embedding_cache_dir: str = Field(default="")
 
     # --- Observability (OpenTelemetry) ---
     otel_enabled: bool = Field(default=False)
